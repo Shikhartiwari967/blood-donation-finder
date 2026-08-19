@@ -40,6 +40,42 @@ const searchDonors = async (req, res) => {
   }
 };
 
+const updateAvailability = async (req, res) => {
+  try {
+    const { isAvailable } = req.body;
+
+    if (typeof isAvailable !== "boolean") {
+      return res.status(400).json({
+        message: "isAvailable must be true or false",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      { isAvailable },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Availability updated successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Availability update error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 module.exports = {
   searchDonors,
+  updateAvailability,
 };
