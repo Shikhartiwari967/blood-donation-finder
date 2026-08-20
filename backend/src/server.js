@@ -6,6 +6,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const protect = require("./middleware/authMiddleware");
 const donorRoutes = require("./routes/donorRoutes");
+const requestRoutes = require("./routes/requestRoutes");
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get("/api/protected", protect, (req, res) => {
   });
 });
 app.use("/api/donors", donorRoutes);
+app.use("/api/requests", requestRoutes);
 
 
 app.get("/", (req, res) => {
