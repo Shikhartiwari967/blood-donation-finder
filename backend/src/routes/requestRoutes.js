@@ -6,14 +6,14 @@ const {
   getActiveRequests,
   updateRequestStatus,
   respondToBloodRequest,
-  getRequestResponses
+  getRequestResponses,
 } = require("../controllers/requestController");
 
 const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Create a blood donation request
+// Create a blood request
 router.post("/", protect, createBloodRequest);
 
 // Get all active blood requests

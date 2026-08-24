@@ -39,6 +39,7 @@ const createBloodRequest = async (req, res) => {
       bloodGroup,
       city: { $regex: new RegExp(`^${city}$`, "i") },
       isAvailable: true,
+      isVerified: true,
       _id: { $ne: req.user.userId },
     });
 
@@ -155,6 +156,25 @@ const respondToBloodRequest = async (req, res) => {
     const { status } = req.body;
     const requestId = req.params.id;
     const donorId = req.user.userId;
+    const donor = await User.findById(donorId);
+
+      if (!donor) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      if (donor.role !== "donor") {
+        return res.status(403).json({
+          message: "Only donors can respond to blood requests",
+        });
+      }
+
+      if (!donor.isVerified) {
+        return res.status(403).json({
+          message: "Only verified donors can respond to blood requests",
+        });
+      }
 
     // Only accepted or declined are allowed
     if (!["accepted", "declined"].includes(status)) {
