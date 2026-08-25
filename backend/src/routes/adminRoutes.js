@@ -5,6 +5,9 @@ const {
   getAllDonors,
   getAllBloodRequests,
   updateBloodRequestStatus,
+  getAllRequesters,
+  updateRequesterVerification,
+  getAdminStats,
 } = require("../controllers/adminController");
 
 const protect = require("../middleware/authMiddleware");
@@ -43,6 +46,30 @@ router.patch(
   protect,
   adminMiddleware,
   updateBloodRequestStatus
+);
+
+// Get all requesters
+router.get(
+  "/requesters",
+  protect,
+  adminMiddleware,
+  getAllRequesters
+);
+
+// Verify / unverify requester
+router.patch(
+  "/requesters/:userId/verification",
+  protect,
+  adminMiddleware,
+  updateRequesterVerification
+);
+
+// GET ADMIN DASHBOARD STATISTICS
+router.get(
+  "/stats",
+  protect,
+  adminMiddleware,
+  getAdminStats
 );
 
 module.exports = router;

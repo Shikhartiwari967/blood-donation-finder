@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const BloodRequest = require("../models/BloodRequest");
+const Notification = require("../models/Notification");
+
 
 // VERIFY / UNVERIFY DONOR
 const updateDonorVerification = async (req, res) => {
@@ -190,10 +192,169 @@ const updateBloodRequestStatus = async (req, res) => {
   }
 };
 
+// GET ALL REQUESTERS
+const getAllRequesters = async (req, res) => {
+  try {
+    const requesters = await User.find({ role: "recipient" })
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      count: requesters.length,
+      requesters,
+    });
+  } catch (error) {
+    console.error("Get all requesters error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+// VERIFY / UNVERIFY REQUESTER
+const updateRequesterVerification = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isVerified } = req.body;
+
+    if (typeof isVerified !== "boolean") {
+      return res.status(400).json({
+        message: "isVerified must be true or false",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (user.role !== "recipient") {
+      return res.status(400).json({
+        message: "Only recipient accounts can be verified",
+      });
+    }
+
+    user.isVerified = isVerified;
+
+    await user.save();
+
+    res.status(200).json({
+      message: isVerified
+        ? "Recipient verified successfully"
+        : "Recipient verification removed successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified,
+      },
+    });
+  } catch (error) {
+    console.error("Update recipient verification error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
+// GET ADMIN DASHBOARD STATISTICS
+const getAdminStats = async (req, res) => {
+  try {
+    const [
+      totalUsers,
+      totalDonors,
+      totalRequesters,
+      totalAdmins,
+      verifiedDonors,
+      availableDonors,
+      totalRequests,
+      activeRequests,
+      fulfilledRequests,
+      cancelledRequests,
+      totalNotifications,
+    ] = await Promise.all([
+      User.countDocuments(),
+
+      User.countDocuments({ role: "donor" }),
+
+      User.countDocuments({ role: "recipient" }),
+
+      User.countDocuments({ role: "admin" }),
+
+      User.countDocuments({
+        role: "donor",
+        isVerified: true,
+      }),
+
+      User.countDocuments({
+        role: "donor",
+        isAvailable: true,
+      }),
+
+      BloodRequest.countDocuments(),
+
+      BloodRequest.countDocuments({
+        status: "active",
+      }),
+
+      BloodRequest.countDocuments({
+        status: "fulfilled",
+      }),
+
+      BloodRequest.countDocuments({
+        status: "cancelled",
+      }),
+
+      Notification.countDocuments(),
+    ]);
+
+    res.status(200).json({
+      users: {
+        total: totalUsers,
+        donors: totalDonors,
+        requesters: totalRequesters,
+        admins: totalAdmins,
+      },
+
+      donors: {
+        verified: verifiedDonors,
+        available: availableDonors,
+      },
+
+      requests: {
+        total: totalRequests,
+        active: activeRequests,
+        fulfilled: fulfilledRequests,
+        cancelled: cancelledRequests,
+      },
+
+      notifications: {
+        total: totalNotifications,
+      },
+    });
+  } catch (error) {
+    console.error("Get admin stats error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
 
 module.exports = {
   updateDonorVerification,
   getAllDonors,
   getAllBloodRequests,
   updateBloodRequestStatus,
+  getAllRequesters,
+  updateRequesterVerification,
+  getAdminStats,
 };
+
+
