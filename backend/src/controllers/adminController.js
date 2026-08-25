@@ -152,9 +152,48 @@ const getAllBloodRequests = async (req, res) => {
   }
 };
 
+// UPDATE BLOOD REQUEST STATUS - ADMIN
+const updateBloodRequestStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const allowedStatuses = ["active", "fulfilled", "cancelled"];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        message: "Invalid status",
+      });
+    }
+
+    const request = await BloodRequest.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        message: "Blood request not found",
+      });
+    }
+
+    request.status = status;
+
+    await request.save();
+
+    res.status(200).json({
+      message: "Blood request status updated successfully",
+      request,
+    });
+  } catch (error) {
+    console.error("Admin update request status error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 
 module.exports = {
   updateDonorVerification,
   getAllDonors,
   getAllBloodRequests,
+  updateBloodRequestStatus,
 };

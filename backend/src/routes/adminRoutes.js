@@ -4,6 +4,7 @@ const {
   updateDonorVerification,
   getAllDonors,
   getAllBloodRequests,
+  updateBloodRequestStatus,
 } = require("../controllers/adminController");
 
 const protect = require("../middleware/authMiddleware");
@@ -34,6 +35,14 @@ router.patch(
   protect,
   adminMiddleware,
   updateDonorVerification
+);
+
+// Update blood request status
+router.patch(
+  "/requests/:id/status",
+  protect,
+  adminMiddleware,
+  updateBloodRequestStatus
 );
 
 module.exports = router;
