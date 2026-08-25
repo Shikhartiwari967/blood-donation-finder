@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const BloodRequest = require("../models/BloodRequest");
 
 // VERIFY / UNVERIFY DONOR
 const updateDonorVerification = async (req, res) => {
@@ -99,8 +100,61 @@ const getAllDonors = async (req, res) => {
   }
 };
 
+// GET ALL BLOOD REQUESTS
+const getAllBloodRequests = async (req, res) => {
+  try {
+    const {
+      bloodGroup,
+      city,
+      status,
+      urgency,
+    } = req.query;
+
+    const filter = {};
+
+    // Filter by blood group
+    if (bloodGroup) {
+      filter.bloodGroup = bloodGroup;
+    }
+
+    // Filter by city
+    if (city) {
+      filter.city = {
+        $regex: city,
+        $options: "i",
+      };
+    }
+
+    // Filter by request status
+    if (status) {
+      filter.status = status;
+    }
+
+    // Filter by urgency
+    if (urgency) {
+      filter.urgency = urgency;
+    }
+
+    const requests = await BloodRequest.find(filter)
+      .populate("requester", "name email bloodGroup city")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      count: requests.length,
+      requests,
+    });
+  } catch (error) {
+    console.error("Get all blood requests error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 
 module.exports = {
   updateDonorVerification,
   getAllDonors,
+  getAllBloodRequests,
 };
