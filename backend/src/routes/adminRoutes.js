@@ -8,6 +8,7 @@ const {
   getAllRequesters,
   updateRequesterVerification,
   getAdminStats,
+  getActivityLogs,
 } = require("../controllers/adminController");
 
 const protect = require("../middleware/authMiddleware");
@@ -70,6 +71,14 @@ router.get(
   protect,
   adminMiddleware,
   getAdminStats
+);
+
+// GET ACTIVITY LOGS
+router.get(
+  "/activity-logs",
+  protect,
+  adminMiddleware,
+  getActivityLogs
 );
 
 module.exports = router;

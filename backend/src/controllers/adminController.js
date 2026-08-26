@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const BloodRequest = require("../models/BloodRequest");
 const Notification = require("../models/Notification");
+const createActivityLog = require("../utils/activityLogger");
+const ActivityLog = require("../models/ActivityLog");
 
 
 // VERIFY / UNVERIFY DONOR
@@ -31,6 +33,16 @@ const updateDonorVerification = async (req, res) => {
 
     user.isVerified = isVerified;
     await user.save();
+
+      await createActivityLog({
+        actor: req.user.userId,
+        action: isVerified ? "VERIFY_DONOR" : "UNVERIFY_DONOR",
+        targetType: "User",
+        targetId: user._id,
+        details: isVerified
+          ? "Admin verified donor profile"
+          : "Admin removed donor verification",
+      });
 
     res.status(200).json({
       message: isVerified
@@ -178,7 +190,14 @@ const updateBloodRequestStatus = async (req, res) => {
     request.status = status;
 
     await request.save();
-
+    
+    await createActivityLog({
+    actor: req.user.userId,
+    action: "UPDATE_REQUEST_STATUS",
+    targetType: "BloodRequest",
+    targetId: request._id,
+    details: `Admin changed blood request status to ${status}`,
+  });
     res.status(200).json({
       message: "Blood request status updated successfully",
       request,
@@ -241,6 +260,18 @@ const updateRequesterVerification = async (req, res) => {
     user.isVerified = isVerified;
 
     await user.save();
+
+  await createActivityLog({
+    actor: req.user.userId,
+    action: isVerified
+      ? "VERIFY_REQUESTER"
+      : "UNVERIFY_REQUESTER",
+    targetType: "User",
+    targetId: user._id,
+    details: isVerified
+      ? "Admin verified recipient profile"
+      : "Admin removed recipient verification",
+  });
 
     res.status(200).json({
       message: isVerified
@@ -347,6 +378,39 @@ const getAdminStats = async (req, res) => {
   }
 };
 
+
+// GET ACTIVITY LOGS - ADMIN
+const getActivityLogs = async (req, res) => {
+  try {
+    const { action, targetType } = req.query;
+
+    const filter = {};
+
+    if (action) {
+      filter.action = action;
+    }
+
+    if (targetType) {
+      filter.targetType = targetType;
+    }
+
+    const logs = await ActivityLog.find(filter)
+      .populate("actor", "name email role")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      count: logs.length,
+      logs,
+    });
+  } catch (error) {
+    console.error("Get activity logs error:", error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+};
+
 module.exports = {
   updateDonorVerification,
   getAllDonors,
@@ -355,6 +419,7 @@ module.exports = {
   getAllRequesters,
   updateRequesterVerification,
   getAdminStats,
+  getActivityLogs,
 };
 
 
