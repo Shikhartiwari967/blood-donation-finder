@@ -2,13 +2,18 @@ const User = require("../models/User");
 
 const searchDonors = async (req, res) => {
   try {
-    const { bloodGroup, city } = req.query;
+    const { bloodGroup, city , availability } = req.query;
 
-    // Build search filter
+    // Base filter: only verified donor accounts
     const filter = {
       role: "donor",
-      isAvailable: true,
+      isVerified: true,
     };
+
+     // Filter by availability if provided
+    if (availability !== undefined && availability !== "") {
+      filter.isAvailable = availability === "true";
+    }
 
     // Filter by blood group if provided
     if (bloodGroup) {

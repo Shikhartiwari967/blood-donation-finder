@@ -23,6 +23,7 @@ import CreateAdmin from "../pages/admin/CreateAdmin";
 
 import AdminLayout from "../components/admin/AdminLayout";
 import ProtectedRoute from "./ProtectedRoute";
+import FindDonor from "../pages/donor-search/FindDonor";
 
 function AppRoutes() {
   return (
@@ -33,6 +34,7 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/find-donor" element={<FindDonor />} />
 
         {/* Admin routes */}
         <Route
