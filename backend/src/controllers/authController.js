@@ -1,7 +1,9 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const createActivityLog = require("../utils/activityLogger");
 
+//register
 const registerUser = async (req, res) => {
   try {
     const {
@@ -48,7 +50,7 @@ const registerUser = async (req, res) => {
       bloodGroup,
       phone,
       city,
-      role: role || "donor",
+      role: role === "recipient" ? "recipient" : "donor",
     });
 
     res.status(201).json({
@@ -60,6 +62,8 @@ const registerUser = async (req, res) => {
         bloodGroup: user.bloodGroup,
         city: user.city,
         role: user.role,
+        isVerified: user.isVerified,
+        isAvailable: user.isAvailable,
       },
     });
   } catch (error) {
@@ -108,7 +112,8 @@ const loginUser = async (req, res) => {
     // Create JWT
     const token = jwt.sign(
       {
-        userId: user._id,
+        userId: user._id.toString(),
+        role: user.role,
       },
       process.env.JWT_SECRET,
       {
@@ -125,10 +130,13 @@ const loginUser = async (req, res) => {
         email: user.email,
         bloodGroup: user.bloodGroup,
         city: user.city,
+        role: user.role,
+        isVerified: user.isVerified,
+        isAvailable: user.isAvailable,
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Login error:", error);
 
     res.status(500).json({
       message: "Server error",
@@ -136,8 +144,65 @@ const loginUser = async (req, res) => {
   }
 };
 
+
+// create admin account
+const createAdmin = async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Name, email and password are required",
+      });
+    }
+
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User with this email already exists",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const admin = await User.create({
+      name,
+      email,
+      phone,
+      password: hashedPassword,
+      role: "admin",
+      isVerified: true,
+      isAvailable: false,
+    });
+
+    await createActivityLog({
+      user: req.user.userId,
+      action: "ADMIN_CREATED",
+      details: `Admin account created for ${admin.email}`,
+    });
+
+    return res.status(201).json({
+      message: "Admin account created successfully",
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+      },
+    });
+  } catch (error) {
+    console.error("Create admin error:", error);
+
+    return res.status(500).json({
+      message: "Server error while creating admin",
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  createAdmin,
 };
 
