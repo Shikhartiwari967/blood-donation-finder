@@ -29,9 +29,19 @@ const registerUser = async (req, res) => {
         message: "Please provide all required fields",
       });
     }
+    //password length minimun 6
+      if (password.length < 6) {
+      return res.status(400).json({
+        message: "Password must be at least 6 characters long",
+      });
+    }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+    });
 
     if (existingUser) {
       return res.status(409).json({
@@ -43,15 +53,15 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const user = await User.create({
-      name,
-      email,
+      const user = await User.create({
+      name: name.trim(),
+      email: normalizedEmail,
       password: hashedPassword,
       bloodGroup,
-      phone,
-      city,
+      phone: phone.trim(),
+      city: city.trim(),
       role: role === "recipient" ? "recipient" : "donor",
-    });
+    })
 
     res.status(201).json({
       message: "User registered successfully",
@@ -67,12 +77,19 @@ const registerUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Registration error:", error);
+  console.error("Registration error:", error);
 
-    res.status(500).json({
-      message: "Server error",
+  if (error.name === "ValidationError") {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: Object.values(error.errors).map((err) => err.message),
     });
   }
+
+  return res.status(500).json({
+    message: "Server error",
+  });
+}
 };
 
 
