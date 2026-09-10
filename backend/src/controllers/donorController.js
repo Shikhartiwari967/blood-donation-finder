@@ -1,8 +1,51 @@
 const User = require("../models/User");
 
+const allowedBloodGroups = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "AB+",
+  "AB-",
+  "O+",
+  "O-",
+];
+
+// Escape special regex characters
+const escapeRegex = (value) => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 const searchDonors = async (req, res) => {
   try {
-    const { bloodGroup, city , availability } = req.query;
+    const { bloodGroup, city, availability } = req.query;
+
+    // Validate blood group
+    if (bloodGroup && !allowedBloodGroups.includes(bloodGroup)) {
+      return res.status(400).json({
+        message: "Invalid blood group",
+      });
+    }
+
+    // Validate availability
+    if (
+      availability !== undefined &&
+      availability !== "" &&
+      availability !== "true" &&
+      availability !== "false"
+    ) {
+      return res.status(400).json({
+        message: "availability must be true or false",
+      });
+    }
+
+    // Validate city length
+    if (city && city.trim().length < 2) {
+      return res.status(400).json({
+        message: "City must be at least 2 characters long",
+      });
+    }
+
 
     // Base filter: only verified donor accounts
     const filter = {
@@ -20,7 +63,7 @@ const searchDonors = async (req, res) => {
       filter.bloodGroup = bloodGroup;
     }
 
-    // Filter by city if provided
+    // Filter by city
     if (city) {
       filter.city = {
         $regex: city,
