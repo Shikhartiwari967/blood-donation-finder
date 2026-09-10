@@ -18,18 +18,27 @@ const bloodRequestSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+       minlength: 2,
+       maxlength: 100,
     },
 
     hospital: {
       type: String,
       required: true,
       trim: true,
+      minlength: 2,
+      maxlength: 150,
     },
 
     units: {
       type: Number,
       required: true,
       min: 1,
+     validate: {
+    validator: Number.isInteger,
+    message: "Units must be a whole number",
+  },
+
     },
 
     urgency: {

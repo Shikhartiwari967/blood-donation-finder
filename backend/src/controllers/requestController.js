@@ -61,12 +61,19 @@ const createBloodRequest = async (req, res) => {
       request: bloodRequest,
     });
   } catch (error) {
-    console.error("Create blood request error:", error);
+  console.error("Create blood request error:", error);
 
-    return res.status(500).json({
-      message: "Server error",
+  if (error.name === "ValidationError") {
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: Object.values(error.errors).map((err) => err.message),
     });
   }
+
+  return res.status(500).json({
+    message: "Server error",
+  });
+}
 };
 
 // GET MY REQUESTS
