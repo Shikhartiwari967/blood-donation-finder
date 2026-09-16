@@ -1,34 +1,14 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../../components/Navbar";
 
 const Home = () => {
   const navigate = useNavigate();
 
   return (
     <div style={styles.page}>
-      {/* Navbar */}
-      <nav style={styles.navbar}>
-        <div style={styles.logo} onClick={() => navigate("/")}>
-          <span style={styles.logoIcon}>♥</span>
-          <span>Blood Donation Finder</span>
-        </div>
-
-        <div style={styles.navActions}>
-          <button
-            style={styles.loginButton}
-            onClick={() => navigate("/login")}
-          >
-            Login
-          </button>
-
-          <button
-            style={styles.registerButton}
-            onClick={() => navigate("/register")}
-          >
-            Register
-          </button>
-        </div>
-      </nav>
+    <Navbar />
+    
 
       {/* Hero Section */}
       <section style={styles.hero}>

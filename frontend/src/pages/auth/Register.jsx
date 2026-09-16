@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import Navbar from "../../components/Navbar";
 
 function Register() {
   const navigate = useNavigate();
@@ -70,16 +71,7 @@ function Register() {
 
   return (
     <div style={styles.page}>
-      {/* Header */}
-      <header style={styles.header}>
-        <div
-          style={styles.logo}
-          onClick={() => navigate("/")}
-        >
-          <span style={styles.logoIcon}>♥</span>
-          <span>Blood Donation Finder</span>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main */}
       <main style={styles.main}>
