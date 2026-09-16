@@ -1,0 +1,685 @@
+/* 
+   Find Donor Page
+ */
+
+.find-donor-page {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.find-donor-main {
+  width: min(1150px, 92%);
+  margin: 0 auto;
+  padding: 55px 0 80px;
+}
+
+/* 
+   Header
+ */
+
+.find-donor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 32px;
+}
+
+.find-donor-heading {
+  max-width: 720px;
+}
+
+.find-donor-label,
+.results-label {
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.find-donor-heading h1 {
+  margin: 8px 0 10px;
+  color: #0f172a;
+  font-size: 38px;
+  line-height: 1.2;
+  letter-spacing: -1px;
+}
+
+.find-donor-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
+}
+
+.search-header-icon {
+  width: 70px;
+  height: 70px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 18px;
+
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+
+  font-size: 32px;
+}
+
+/* 
+   Search Panel
+ */
+
+.search-panel {
+  margin-bottom: 35px;
+  padding: 26px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.05);
+}
+
+.search-panel-heading {
+  margin-bottom: 22px;
+}
+
+.search-panel-heading h2 {
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.search-panel-heading p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.search-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.35fr;
+  gap: 16px;
+  align-items: end;
+}
+
+.search-field label {
+  display: block;
+  margin-bottom: 8px;
+
+  color: #334155;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.search-field input,
+.search-field select {
+  width: 100%;
+  height: 46px;
+
+  padding: 0 13px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+
+  background: #ffffff;
+  color: #334155;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.search-field input::placeholder {
+  color: #94a3b8;
+}
+
+.search-field input:focus,
+.search-field select:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.search-actions {
+  display: flex;
+  gap: 9px;
+}
+
+.search-button,
+.reset-button {
+  height: 46px;
+
+  border-radius: 9px;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.search-button {
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  border: none;
+
+  background: #dc2626;
+  color: #ffffff;
+
+  box-shadow: 0 6px 15px rgba(220, 38, 38, 0.16);
+}
+
+.search-button:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.reset-button {
+  padding: 0 16px;
+
+  border: 1px solid #cbd5e1;
+
+  background: #ffffff;
+  color: #475569;
+}
+
+.reset-button:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.search-button:disabled,
+.reset-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button-spinner {
+  width: 14px;
+  height: 14px;
+
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+
+  border-radius: 50%;
+
+  animation: donor-spin 0.7s linear infinite;
+}
+
+@keyframes donor-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+   Error
+*/
+
+.donor-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  margin-bottom: 25px;
+  padding: 15px 17px;
+
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.error-icon {
+  width: 24px;
+  height: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #dc2626;
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.donor-error strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 13px;
+}
+
+.donor-error p {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+/* 
+   Results
+ */
+
+.results-section {
+  margin-top: 15px;
+}
+
+.results-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 18px;
+}
+
+.results-heading h2 {
+  margin: 5px 0 0;
+
+  color: #0f172a;
+
+  font-size: 23px;
+}
+
+.results-count {
+  padding: 7px 12px;
+
+  border-radius: 999px;
+
+  background: #fef2f2;
+  color: #b91c1c;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* 
+   Donor Cards
+ */
+
+.donor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.donor-card {
+  padding: 22px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow: 0 5px 18px rgba(15, 23, 42, 0.04);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.donor-card:hover {
+  transform: translateY(-4px);
+
+  border-color: #fecaca;
+
+  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08);
+}
+
+.donor-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 17px;
+}
+
+.donor-avatar {
+  width: 45px;
+  height: 45px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #fef2f2;
+  color: #b91c1c;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.verified-badge {
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: #eff6ff;
+  color: #1d4ed8;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.donor-main-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.donor-main-info h3 {
+  margin: 0 0 4px;
+
+  color: #0f172a;
+
+  font-size: 17px;
+}
+
+.donor-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  margin: 0;
+
+  color: #94a3b8;
+
+  font-size: 12px;
+}
+
+.blood-badge {
+  min-width: 48px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: #dc2626;
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  box-shadow: 0 6px 15px rgba(220, 38, 38, 0.18);
+}
+
+.donor-divider {
+  height: 1px;
+
+  margin: 19px 0;
+
+  background: #f1f5f9;
+}
+
+.donor-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  font-size: 12px;
+}
+
+.detail-row > span:first-child {
+  color: #94a3b8;
+}
+
+.detail-row strong {
+  color: #334155;
+}
+
+.availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  font-weight: 700;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+}
+
+.available {
+  color: #15803d;
+}
+
+.available .status-dot {
+  background: #22c55e;
+}
+
+.unavailable {
+  color: #64748b;
+}
+
+.unavailable .status-dot {
+  background: #94a3b8;
+}
+
+.verification-text {
+  color: #1d4ed8 !important;
+  font-weight: 600;
+}
+
+/* 
+   Empty / Initial State
+ */
+
+.empty-state,
+.initial-state {
+  padding: 60px 25px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  text-align: center;
+}
+
+.empty-icon,
+.initial-icon {
+  width: 64px;
+  height: 64px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0 auto 17px;
+
+  border-radius: 50%;
+
+  background: #fef2f2;
+
+  font-size: 27px;
+}
+
+.empty-state h3,
+.initial-state h2 {
+  margin: 0 0 7px;
+
+  color: #0f172a;
+
+  font-size: 19px;
+}
+
+.empty-state p,
+.initial-state p {
+  margin: 0;
+
+  color: #94a3b8;
+
+  font-size: 13px;
+}
+
+.empty-reset-button {
+  margin-top: 20px;
+
+  padding: 9px 16px;
+
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+
+  background: #ffffff;
+  color: #dc2626;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.empty-reset-button:hover {
+  background: #fef2f2;
+}
+
+.initial-features {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  margin-top: 23px;
+
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+/* 
+   Tablet
+ */
+
+@media (max-width: 950px) {
+  .search-fields {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .search-actions {
+    align-self: end;
+  }
+
+  .donor-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/*
+   Mobile
+ */
+
+@media (max-width: 650px) {
+  .find-donor-main {
+    width: 92%;
+    padding: 38px 0 60px;
+  }
+
+  .find-donor-header {
+    margin-bottom: 25px;
+  }
+
+  .find-donor-heading h1 {
+    font-size: 30px;
+  }
+
+  .find-donor-heading p {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .search-header-icon {
+    display: none;
+  }
+
+  .search-panel {
+    padding: 20px;
+    border-radius: 15px;
+  }
+
+  .search-fields {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .search-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+
+  .donor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .results-heading {
+    align-items: flex-end;
+  }
+
+  .results-heading h2 {
+    font-size: 20px;
+  }
+
+  .results-count {
+    font-size: 11px;
+  }
+
+  .initial-state,
+  .empty-state {
+    padding: 50px 20px;
+  }
+}
+
+@media (max-width: 400px) {
+  .search-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .reset-button {
+    width: 100%;
+  }
+
+  .initial-features {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

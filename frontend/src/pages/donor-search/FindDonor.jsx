@@ -1,5 +1,7 @@
 import { useState } from "react";
+import Navbar from "../../components/Navbar";
 import api from "../../services/api";
+import "./FindDonor.css";
 
 function FindDonor() {
   const [bloodGroup, setBloodGroup] = useState("");
@@ -61,39 +63,45 @@ function FindDonor() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-10">
-      <div className="mx-auto max-w-6xl">
+    <div className="find-donor-page">
+      <Navbar />
 
-        {/* Header */}
-        <div className="mb-8">
-          <p className="mb-2 text-sm font-bold tracking-wide text-red-600">
-            DONOR SEARCH
-          </p>
+      <main className="find-donor-main">
+        {/* Page Header */}
+        <section className="find-donor-header">
+          <div className="find-donor-heading">
+            <span className="find-donor-label">DONOR SEARCH</span>
 
-          <h1 className="text-3xl font-bold text-gray-900">
-            Find a Blood Donor
-          </h1>
+            <h1>Find a Blood Donor</h1>
 
-          <p className="mt-2 text-gray-500">
-            Find verified donors based on blood group, city and availability.
-          </p>
-        </div>
+            <p>
+              Find verified donors based on blood group, city and
+              availability.
+            </p>
+          </div>
+
+          <div className="search-header-icon">🩸</div>
+        </section>
 
         {/* Search Filters */}
-        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <form onSubmit={handleSearch}>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+        <section className="search-panel">
+          <div className="search-panel-heading">
+            <div>
+              <h2>Search Donors</h2>
+              <p>Enter your requirements to find matching donors.</p>
+            </div>
+          </div>
 
+          <form onSubmit={handleSearch}>
+            <div className="search-fields">
               {/* Blood Group */}
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Blood Group
-                </label>
+              <div className="search-field">
+                <label htmlFor="bloodGroup">Blood Group</label>
 
                 <select
+                  id="bloodGroup"
                   value={bloodGroup}
                   onChange={(e) => setBloodGroup(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-red-500"
                 >
                   <option value="">All Blood Groups</option>
                   <option value="A+">A+</option>
@@ -108,30 +116,26 @@ function FindDonor() {
               </div>
 
               {/* City */}
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  City
-                </label>
+              <div className="search-field">
+                <label htmlFor="city">City</label>
 
                 <input
+                  id="city"
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="Enter city"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-red-500"
+                  placeholder="e.g. Mathura"
                 />
               </div>
 
               {/* Availability */}
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-gray-700">
-                  Availability
-                </label>
+              <div className="search-field">
+                <label htmlFor="availability">Availability</label>
 
                 <select
+                  id="availability"
                   value={availability}
                   onChange={(e) => setAvailability(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-red-500"
                 >
                   <option value="">Any Availability</option>
                   <option value="true">Available</option>
@@ -140,121 +144,143 @@ function FindDonor() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-end gap-3">
+              <div className="search-actions">
                 <button
                   type="submit"
-                  className="flex-1 rounded-lg bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
+                  className="search-button"
+                  disabled={loading}
                 >
-                  {loading ? "Searching..." : "Search"}
+                  {loading ? (
+                    <>
+                      <span className="button-spinner" />
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <span>⌕</span>
+                      Search Donors
+                    </>
+                  )}
                 </button>
 
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                  className="reset-button"
+                  disabled={loading}
                 >
                   Reset
                 </button>
               </div>
             </div>
           </form>
-        </div>
+        </section>
 
         {/* Error */}
         {error && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-            {error}
+          <div className="donor-error">
+            <span className="error-icon">!</span>
+
+            <div>
+              <strong>Search failed</strong>
+              <p>{error}</p>
+            </div>
           </div>
         )}
 
-        {/* Search Results */}
+        {/* Results */}
         {searched && !loading && (
-          <div>
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Donor Results
-              </h2>
+          <section className="results-section">
+            <div className="results-heading">
+              <div>
+                <span className="results-label">SEARCH RESULTS</span>
 
-              <span className="rounded-full bg-red-50 px-3 py-1 text-sm font-medium text-red-600">
+                <h2>Verified Donors</h2>
+              </div>
+
+              <span className="results-count">
                 {donors.length} donor{donors.length !== 1 ? "s" : ""}
               </span>
             </div>
 
             {donors.length === 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white px-6 py-16 text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-2xl">
-                  🩸
-                </div>
+              <div className="empty-state">
+                <div className="empty-icon">🩸</div>
 
-                <h2 className="text-xl font-semibold text-gray-900">
-                  No matching donors found
-                </h2>
+                <h3>No matching donors found</h3>
 
-                <p className="mt-2 text-sm text-gray-500">
-                  Try changing your blood group, city or availability filters.
+                <p>
+                  Try changing your blood group, city or availability
+                  filters.
                 </p>
+
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="empty-reset-button"
+                >
+                  Clear Filters
+                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+              <div className="donor-grid">
                 {donors.map((donor) => (
-                  <div
-                    key={donor._id}
-                    className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                  >
-                    {/* Donor Header */}
-                    <div className="mb-5 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {donor.name}
-                        </h3>
+                  <div className="donor-card" key={donor._id}>
+                    <div className="donor-card-top">
+                      <div className="donor-avatar">
+                        {donor.name?.charAt(0)?.toUpperCase() || "D"}
+                      </div>
 
-                        <p className="mt-1 text-sm text-gray-500">
+                      <span className="verified-badge">
+                        ✓ Verified
+                      </span>
+                    </div>
+
+                    <div className="donor-main-info">
+                      <div>
+                        <h3>{donor.name}</h3>
+
+                        <p className="donor-location">
+                          <span>⌖</span>
                           {donor.city}
                         </p>
                       </div>
 
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-sm font-bold text-red-600">
+                      <div className="blood-badge">
                         {donor.bloodGroup}
                       </div>
                     </div>
 
-                    {/* Donor Details */}
-                    <div className="space-y-3 border-t border-gray-100 pt-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                          Blood Group
-                        </span>
+                    <div className="donor-divider" />
 
-                        <span className="font-semibold text-gray-900">
-                          {donor.bloodGroup}
-                        </span>
+                    <div className="donor-details">
+                      <div className="detail-row">
+                        <span>Blood Group</span>
+                        <strong>{donor.bloodGroup}</strong>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                          Availability
-                        </span>
+                      <div className="detail-row">
+                        <span>Availability</span>
 
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          className={
                             donor.isAvailable
-                              ? "bg-green-50 text-green-700"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
+                              ? "availability available"
+                              : "availability unavailable"
+                          }
                         >
+                          <span className="status-dot" />
                           {donor.isAvailable
                             ? "Available"
                             : "Unavailable"}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                          Verification
-                        </span>
+                      <div className="detail-row">
+                        <span>Verification</span>
 
-                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                          ✓ Verified
+                        <span className="verification-text">
+                          ✓ Verified donor
                         </span>
                       </div>
                     </div>
@@ -262,26 +288,28 @@ function FindDonor() {
                 ))}
               </div>
             )}
-          </div>
+          </section>
         )}
 
         {/* Initial State */}
         {!searched && (
-          <div className="rounded-2xl border border-gray-200 bg-white px-6 py-16 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-2xl">
-              🩸
-            </div>
+          <section className="initial-state">
+            <div className="initial-icon">🩸</div>
 
-            <h2 className="text-xl font-semibold text-gray-900">
-              Search for verified donors
-            </h2>
+            <h2>Search for verified donors</h2>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p>
               Select your requirements above to find matching donors.
             </p>
-          </div>
+
+            <div className="initial-features">
+              <span>✓ Verified donors</span>
+              <span>✓ Location based search</span>
+              <span>✓ Availability status</span>
+            </div>
+          </section>
         )}
-      </div>
+      </main>
     </div>
   );
 }
