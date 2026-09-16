@@ -108,6 +108,11 @@ const getMyRequests = async (req, res) => {
 const updateRequestStatus = async (req, res) => {
   try {
     const { status } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({
+      message: "Invalid request ID",
+    });
+  }
 
     const allowedStatuses = ["active", "fulfilled", "cancelled"];
 
@@ -163,6 +168,11 @@ const respondToBloodRequest = async (req, res) => {
     const { status } = req.body;
     const requestId = req.params.id;
     const donorId = req.user.userId;
+    if (!mongoose.Types.ObjectId.isValid(requestId)) {
+    return res.status(400).json({
+      message: "Invalid request ID",
+    });
+  }
      // Find donor
     const donor = await User.findById(donorId);
 
@@ -300,6 +310,11 @@ const getActiveRequests = async (req, res) => {
 // GET DONOR RESPONSES FOR A BLOOD REQUEST
 const getRequestResponses = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({
+      message: "Invalid request ID",
+    }); 
+  }
     const request = await BloodRequest.findOne({
       _id: req.params.id,
       requester: req.user.userId,
