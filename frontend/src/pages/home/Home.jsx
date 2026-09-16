@@ -1,96 +1,103 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../../components/Navbar";
+import "./Home.css";
 
 const Home = () => {
   const navigate = useNavigate();
 
   return (
-    <div style={styles.page}>
-    <Navbar />
-    
+    <div className="home-page">
+      <Navbar />
 
-      {/* Hero Section */}
-      <section style={styles.hero}>
-        <div style={styles.heroContent}>
-          <div style={styles.badge}>
-            <span>●</span> Connecting donors with those in need
+      {/* Hero */}
+      <section className="home-hero">
+        <div className="hero-content">
+          <div className="hero-badge">
+            <span>●</span>
+            Connecting donors with those in need
           </div>
 
-          <h1 style={styles.heroTitle}>
+          <h1 className="hero-title">
             Every Drop Can
             <br />
-            <span style={styles.redText}>Save a Life.</span>
+            <span>Save a Life.</span>
           </h1>
 
-          <p style={styles.heroText}>
+          <p className="hero-description">
             Find blood donors quickly, respond to urgent blood requests,
             and help make a difference in someone's life.
           </p>
 
-          <div style={styles.heroButtons}>
+          <div className="hero-actions">
             <button
-              style={styles.primaryButton}
+              className="hero-primary-btn"
               onClick={() => navigate("/register")}
             >
-              Become a Donor →
+              Become a Donor
+              <span>→</span>
             </button>
 
             <button
-              style={styles.secondaryButton}
-              onClick={() => navigate("/login")}
+              className="hero-secondary-btn"
+              onClick={() => navigate("/find-donor")}
             >
               Find Blood
             </button>
           </div>
 
-          <div style={styles.trustText}>
-            ✓ Verified Donors &nbsp;&nbsp; ✓ Real-time Requests &nbsp;&nbsp;
-            ✓ Secure Platform
+          <div className="hero-trust">
+            <span>✓ Verified Donors</span>
+            <span>✓ Real-time Requests</span>
+            <span>✓ Secure Platform</span>
           </div>
         </div>
 
-        <div style={styles.heroVisual}>
-          <div style={styles.bloodCircle}>
-            <div style={styles.drop}>♥</div>
-          </div>
-
-          <div style={{ ...styles.floatingCard, ...styles.cardOne }}>
-            <div style={styles.smallIcon}>🩸</div>
-            <div>
-              <strong>Blood Needed</strong>
-              <p style={styles.cardText}>Urgent Request</p>
+        <div className="hero-visual">
+          <div className="blood-orbit">
+            <div className="blood-drop">
+              <span>♥</span>
             </div>
           </div>
 
-          <div style={{ ...styles.floatingCard, ...styles.cardTwo }}>
-            <div style={styles.checkIcon}>✓</div>
+          <div className="floating-card floating-card-top">
+            <div className="floating-icon blood-icon">🩸</div>
+
+            <div>
+              <strong>Blood Needed</strong>
+              <p>Urgent Request</p>
+            </div>
+          </div>
+
+          <div className="floating-card floating-card-bottom">
+            <div className="floating-icon success-icon">✓</div>
+
             <div>
               <strong>Donor Connected</strong>
-              <p style={styles.cardText}>Help is on the way</p>
+              <p>Help is on the way</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section style={styles.featuresSection}>
-        <div style={styles.sectionHeader}>
-          <span style={styles.sectionLabel}>HOW WE HELP</span>
+      <section className="features-section">
+        <div className="section-heading">
+          <span className="section-label">HOW WE HELP</span>
 
-          <h2 style={styles.sectionTitle}>
+          <h2>
             Making Blood Donation
             <br />
-            <span style={styles.redText}>Simple & Accessible</span>
+            <span>Simple & Accessible</span>
           </h2>
 
-          <p style={styles.sectionDescription}>
+          <p>
             Our platform connects blood donors and recipients so that help
             can reach the right person at the right time.
           </p>
         </div>
 
-        <div style={styles.featuresGrid}>
+        <div className="features-grid">
           <FeatureCard
             icon="🔍"
             title="Find a Donor"
@@ -112,25 +119,25 @@ const Home = () => {
       </section>
 
       {/* How It Works */}
-      <section style={styles.howSection}>
-        <div style={styles.sectionHeader}>
-          <span style={styles.sectionLabel}>HOW IT WORKS</span>
+      <section className="how-section">
+        <div className="section-heading">
+          <span className="section-label">HOW IT WORKS</span>
 
-          <h2 style={styles.sectionTitle}>
+          <h2>
             Three Steps.
             <br />
-            <span style={styles.redText}>One Life Saved.</span>
+            <span>One Life Saved.</span>
           </h2>
         </div>
 
-        <div style={styles.stepsContainer}>
+        <div className="steps-container">
           <Step
             number="01"
             title="Create an Account"
             description="Register as a donor or recipient and complete your profile."
           />
 
-          <div style={styles.stepLine}></div>
+          <div className="step-line" />
 
           <Step
             number="02"
@@ -138,7 +145,7 @@ const Home = () => {
             description="Search for donors or create a blood request with your requirements."
           />
 
-          <div style={styles.stepLine}></div>
+          <div className="step-line" />
 
           <Step
             number="03"
@@ -149,498 +156,79 @@ const Home = () => {
       </section>
 
       {/* CTA */}
-      <section style={styles.ctaSection}>
-        <div style={styles.ctaContent}>
-          <h2 style={styles.ctaTitle}>
+      <section className="cta-section">
+        <div className="cta-content">
+          <div className="cta-icon">♥</div>
+
+          <h2>
             Be Someone's Reason
             <br />
             to Smile Today.
           </h2>
 
-          <p style={styles.ctaText}>
+          <p>
             Your donation could be the difference between hope and despair.
           </p>
 
           <button
-            style={styles.ctaButton}
+            className="cta-button"
             onClick={() => navigate("/register")}
           >
-            Join Blood Donation Finder →
+            Join Blood Donation Finder
+            <span>→</span>
           </button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer style={styles.footer}>
-        <div style={styles.footerLogo}>
-          <span style={styles.logoIcon}>♥</span>
-          Blood Donation Finder
+      <footer className="home-footer">
+        <div className="footer-logo">
+          <span className="footer-logo-icon">♥</span>
+          <span>Blood Donation Finder</span>
         </div>
 
-        <p style={styles.footerText}>
-          Connecting people. Saving lives.
-        </p>
+        <p>Connecting people. Saving lives.</p>
 
-        <p style={styles.copyright}>
+        <div className="footer-divider" />
+
+        <small>
           © 2026 Blood Donation Finder. All rights reserved.
-        </p>
+        </small>
       </footer>
     </div>
   );
 };
 
 /* Feature Card */
+
 const FeatureCard = ({ icon, title, description }) => {
   return (
-    <div style={styles.featureCard}>
-      <div style={styles.featureIcon}>{icon}</div>
+    <div className="feature-card">
+      <div className="feature-icon">{icon}</div>
 
-      <h3 style={styles.featureTitle}>{title}</h3>
+      <h3>{title}</h3>
 
-      <p style={styles.featureDescription}>{description}</p>
+      <p>{description}</p>
 
-      <div style={styles.learnMore}>Learn more →</div>
+      <span className="feature-link">
+        Learn more <span>→</span>
+      </span>
     </div>
   );
 };
 
 /* Step */
+
 const Step = ({ number, title, description }) => {
   return (
-    <div style={styles.step}>
-      <div style={styles.stepNumber}>{number}</div>
+    <div className="step">
+      <div className="step-number">{number}</div>
 
-      <h3 style={styles.stepTitle}>{title}</h3>
+      <h3>{title}</h3>
 
-      <p style={styles.stepDescription}>{description}</p>
+      <p>{description}</p>
     </div>
   );
-};
-
-/* Styles */
-const styles = {
-  page: {
-    minHeight: "100vh",
-    fontFamily:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-    backgroundColor: "#ffffff",
-    color: "#1f2937",
-  },
-
-  navbar: {
-    height: "72px",
-    padding: "0 7%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottom: "1px solid #f1f1f1",
-    backgroundColor: "#ffffff",
-  },
-
-  logo: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    fontSize: "20px",
-    fontWeight: "700",
-    color: "#1f2937",
-    cursor: "pointer",
-  },
-
-  logoIcon: {
-    width: "38px",
-    height: "38px",
-    borderRadius: "50%",
-    backgroundColor: "#dc2626",
-    color: "#ffffff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "20px",
-  },
-
-  navActions: {
-    display: "flex",
-    gap: "12px",
-  },
-
-  loginButton: {
-    padding: "10px 22px",
-    border: "1px solid #dc2626",
-    borderRadius: "8px",
-    backgroundColor: "#ffffff",
-    color: "#dc2626",
-    fontWeight: "600",
-    cursor: "pointer",
-    fontSize: "14px",
-  },
-
-  registerButton: {
-    padding: "10px 22px",
-    border: "none",
-    borderRadius: "8px",
-    backgroundColor: "#dc2626",
-    color: "#ffffff",
-    fontWeight: "600",
-    cursor: "pointer",
-    fontSize: "14px",
-  },
-
-  hero: {
-    minHeight: "620px",
-    padding: "70px 8%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "50px",
-    background:
-      "linear-gradient(135deg, #fff5f5 0%, #ffffff 55%, #fff5f5 100%)",
-  },
-
-  heroContent: {
-    maxWidth: "620px",
-  },
-
-  badge: {
-    display: "inline-block",
-    padding: "8px 14px",
-    borderRadius: "30px",
-    backgroundColor: "#fee2e2",
-    color: "#b91c1c",
-    fontSize: "13px",
-    fontWeight: "600",
-    marginBottom: "20px",
-  },
-
-  heroTitle: {
-    fontSize: "58px",
-    lineHeight: "1.08",
-    margin: "0 0 22px",
-    fontWeight: "800",
-    letterSpacing: "-2px",
-    color: "#111827",
-  },
-
-  redText: {
-    color: "#dc2626",
-  },
-
-  heroText: {
-    fontSize: "18px",
-    lineHeight: "1.7",
-    color: "#6b7280",
-    maxWidth: "560px",
-    marginBottom: "30px",
-  },
-
-  heroButtons: {
-    display: "flex",
-    gap: "14px",
-    flexWrap: "wrap",
-  },
-
-  primaryButton: {
-    padding: "14px 25px",
-    border: "none",
-    borderRadius: "8px",
-    backgroundColor: "#dc2626",
-    color: "#ffffff",
-    fontSize: "15px",
-    fontWeight: "700",
-    cursor: "pointer",
-    boxShadow: "0 8px 20px rgba(220, 38, 38, 0.2)",
-  },
-
-  secondaryButton: {
-    padding: "14px 25px",
-    border: "1px solid #d1d5db",
-    borderRadius: "8px",
-    backgroundColor: "#ffffff",
-    color: "#374151",
-    fontSize: "15px",
-    fontWeight: "700",
-    cursor: "pointer",
-  },
-
-  trustText: {
-    marginTop: "25px",
-    fontSize: "13px",
-    color: "#6b7280",
-  },
-
-  heroVisual: {
-    width: "430px",
-    height: "430px",
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  bloodCircle: {
-    width: "320px",
-    height: "320px",
-    borderRadius: "50%",
-    backgroundColor: "#fee2e2",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 20px 60px rgba(220, 38, 38, 0.12)",
-  },
-
-  drop: {
-    width: "180px",
-    height: "220px",
-    borderRadius: "55% 55% 60% 60%",
-    backgroundColor: "#dc2626",
-    color: "#ffffff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "65px",
-    boxShadow: "0 15px 35px rgba(220, 38, 38, 0.3)",
-  },
-
-  floatingCard: {
-    position: "absolute",
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    padding: "15px 18px",
-    borderRadius: "12px",
-    backgroundColor: "#ffffff",
-    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
-    fontSize: "13px",
-  },
-
-  cardOne: {
-    top: "35px",
-    left: "0",
-  },
-
-  cardTwo: {
-    bottom: "45px",
-    right: "0",
-  },
-
-  smallIcon: {
-    fontSize: "25px",
-  },
-
-  checkIcon: {
-    width: "30px",
-    height: "30px",
-    borderRadius: "50%",
-    backgroundColor: "#dcfce7",
-    color: "#16a34a",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "800",
-    fontSize: "18px",
-  },
-
-  cardText: {
-    margin: "3px 0 0",
-    color: "#9ca3af",
-    fontSize: "11px",
-  },
-
-  featuresSection: {
-    padding: "90px 8%",
-    backgroundColor: "#ffffff",
-  },
-
-  sectionHeader: {
-    textAlign: "center",
-    maxWidth: "700px",
-    margin: "0 auto 50px",
-  },
-
-  sectionLabel: {
-    fontSize: "12px",
-    fontWeight: "800",
-    letterSpacing: "2px",
-    color: "#dc2626",
-  },
-
-  sectionTitle: {
-    fontSize: "38px",
-    lineHeight: "1.2",
-    margin: "12px 0 16px",
-    fontWeight: "800",
-    color: "#111827",
-  },
-
-  sectionDescription: {
-    color: "#6b7280",
-    fontSize: "16px",
-    lineHeight: "1.7",
-  },
-
-  featuresGrid: {
-    maxWidth: "1100px",
-    margin: "0 auto",
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: "25px",
-  },
-
-  featureCard: {
-    padding: "30px",
-    border: "1px solid #f1f1f1",
-    borderRadius: "15px",
-    backgroundColor: "#ffffff",
-    boxShadow: "0 5px 20px rgba(0, 0, 0, 0.04)",
-  },
-
-  featureIcon: {
-    width: "55px",
-    height: "55px",
-    borderRadius: "12px",
-    backgroundColor: "#fee2e2",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "25px",
-    marginBottom: "20px",
-  },
-
-  featureTitle: {
-    fontSize: "20px",
-    margin: "0 0 10px",
-    color: "#111827",
-  },
-
-  featureDescription: {
-    color: "#6b7280",
-    fontSize: "14px",
-    lineHeight: "1.7",
-    minHeight: "72px",
-  },
-
-  learnMore: {
-    color: "#dc2626",
-    fontSize: "13px",
-    fontWeight: "700",
-    marginTop: "15px",
-  },
-
-  howSection: {
-    padding: "90px 8%",
-    backgroundColor: "#f9fafb",
-  },
-
-  stepsContainer: {
-    maxWidth: "1050px",
-    margin: "0 auto",
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "center",
-    gap: "25px",
-  },
-
-  step: {
-    textAlign: "center",
-    maxWidth: "260px",
-  },
-
-  stepNumber: {
-    width: "55px",
-    height: "55px",
-    margin: "0 auto 18px",
-    borderRadius: "50%",
-    backgroundColor: "#dc2626",
-    color: "#ffffff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "800",
-    fontSize: "14px",
-  },
-
-  stepTitle: {
-    fontSize: "18px",
-    margin: "0 0 10px",
-    color: "#111827",
-  },
-
-  stepDescription: {
-    fontSize: "14px",
-    lineHeight: "1.6",
-    color: "#6b7280",
-  },
-
-  stepLine: {
-    width: "80px",
-    height: "1px",
-    backgroundColor: "#d1d5db",
-    marginTop: "27px",
-  },
-
-  ctaSection: {
-    padding: "80px 8%",
-    backgroundColor: "#dc2626",
-    textAlign: "center",
-  },
-
-  ctaContent: {
-    maxWidth: "700px",
-    margin: "0 auto",
-  },
-
-  ctaTitle: {
-    color: "#ffffff",
-    fontSize: "42px",
-    lineHeight: "1.2",
-    margin: "0 0 18px",
-    fontWeight: "800",
-  },
-
-  ctaText: {
-    color: "#fee2e2",
-    fontSize: "17px",
-    marginBottom: "30px",
-  },
-
-  ctaButton: {
-    padding: "14px 25px",
-    border: "none",
-    borderRadius: "8px",
-    backgroundColor: "#ffffff",
-    color: "#dc2626",
-    fontSize: "15px",
-    fontWeight: "700",
-    cursor: "pointer",
-  },
-
-  footer: {
-    padding: "35px 8%",
-    textAlign: "center",
-    backgroundColor: "#111827",
-    color: "#ffffff",
-  },
-
-  footerLogo: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "10px",
-    fontWeight: "700",
-    fontSize: "17px",
-  },
-
-  footerText: {
-    color: "#9ca3af",
-    fontSize: "13px",
-    margin: "10px 0",
-  },
-
-  copyright: {
-    color: "#6b7280",
-    fontSize: "12px",
-    margin: "15px 0 0",
-  },
 };
 
 export default Home;
