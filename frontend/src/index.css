@@ -1,4 +1,6 @@
-/* Global Reset */
+/* =================================
+   Global Reset
+================================= */
 
 * {
   margin: 0;
@@ -8,6 +10,16 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 body {
@@ -24,16 +36,17 @@ body {
   background: #f8fafc;
   color: #1e293b;
   line-height: 1.6;
+
   min-width: 320px;
 }
-
-/*Root */
 
 #root {
   min-height: 100vh;
 }
 
-/* Typography */
+/* =================================
+   Typography
+================================= */
 
 h1,
 h2,
@@ -55,7 +68,9 @@ a {
   text-decoration: none;
 }
 
-/*Buttons*/
+/* =================================
+   Buttons
+================================= */
 
 button {
   font-family: inherit;
@@ -67,9 +82,9 @@ button:disabled {
   opacity: 0.6;
 }
 
-/* 
+/* =================================
    Form Elements
- */
+================================= */
 
 input,
 select,
@@ -88,18 +103,18 @@ textarea {
   resize: vertical;
 }
 
-/*
+/* =================================
    Images
- */
+================================= */
 
 img {
   max-width: 100%;
   display: block;
 }
 
-/* 
+/* =================================
    Scrollbar
- */
+================================= */
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -118,17 +133,18 @@ img {
   background: #94a3b8;
 }
 
-/* 
-   Selection*/
+/* =================================
+   Selection
+================================= */
 
 ::selection {
   background: #fee2e2;
   color: #991b1b;
 }
 
-/* 
+/* =================================
    Common Utility Classes
- */
+================================= */
 
 .container {
   width: min(1200px, 92%);
@@ -149,8 +165,9 @@ img {
   max-width: 650px;
 }
 
-/* 
-   Common Card */
+/* =================================
+   Common Card
+================================= */
 
 .card {
   background: #ffffff;
@@ -159,16 +176,18 @@ img {
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
-/* 
+/* =================================
    Common Buttons
- */
+================================= */
 
 .btn {
   border: none;
   border-radius: 10px;
   padding: 11px 20px;
+
   font-size: 15px;
   font-weight: 600;
+
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -198,15 +217,18 @@ img {
   background: #cbd5e1;
 }
 
-/* 
+/* =================================
    Status Badges
- */
+================================= */
 
 .badge {
   display: inline-flex;
   align-items: center;
+
   padding: 5px 10px;
+
   border-radius: 999px;
+
   font-size: 12px;
   font-weight: 700;
 }
@@ -231,9 +253,9 @@ img {
   color: #1e40af;
 }
 
-/* 
-   Responsive
- */
+/* =================================
+   Responsive Global
+================================= */
 
 @media (max-width: 768px) {
   .page-section {
@@ -249,9 +271,9 @@ img {
   }
 }
 
-/* ================================
+/* =================================
    Global Focus States
-================================ */
+================================= */
 
 input:focus,
 select:focus,
@@ -260,9 +282,9 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
-/* ================================
-   Button Focus
-================================ */
+/* =================================
+   Keyboard Focus
+================================= */
 
 button:focus-visible,
 a:focus-visible,
@@ -273,9 +295,9 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* ================================
+/* =================================
    Smooth Form Transitions
-================================ */
+================================= */
 
 input,
 select,
@@ -285,18 +307,18 @@ textarea {
     box-shadow 0.2s ease;
 }
 
-/* ================================
+/* =================================
    Placeholder
-================================ */
+================================= */
 
 input::placeholder,
 textarea::placeholder {
   color: #94a3b8;
 }
 
-/* ================================
+/* =================================
    Disabled Form Elements
-================================ */
+================================= */
 
 input:disabled,
 select:disabled,
@@ -306,10 +328,90 @@ textarea:disabled {
   cursor: not-allowed;
 }
 
-/* ================================
+/* =================================
    Button Press Effect
-================================ */
+================================= */
 
 button:not(:disabled):active {
   transform: translateY(0);
+}
+
+/* =================================
+   Login Page Responsive
+================================= */
+
+.login-main {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.login-title,
+.login-subtitle {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .login-main {
+    width: 100% !important;
+    min-width: 0 !important;
+
+    padding: 28px 12px 40px !important;
+
+    overflow-x: hidden !important;
+  }
+
+  .login-card {
+    width: 100% !important;
+    max-width: 440px !important;
+    min-width: 0 !important;
+
+    padding: 30px 20px !important;
+
+    border-radius: 16px !important;
+  }
+
+  .login-title {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    font-size: 27px !important;
+    line-height: 1.2 !important;
+
+    text-align: center !important;
+
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .login-subtitle {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+
+    text-align: center !important;
+
+    overflow-wrap: anywhere !important;
+  }
+}
+
+/* =================================
+   Login Loading Spinner
+================================= */
+
+@keyframes login-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

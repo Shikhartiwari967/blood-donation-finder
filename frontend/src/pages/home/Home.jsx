@@ -17,11 +17,14 @@ const Home = () => {
             <span>●</span>
             Connecting donors with those in need
           </div>
-
           <h1 className="hero-title">
-            Every Drop Can
-            <br />
-            <span>Save a Life.</span>
+            <span className="hero-title-line">
+              Every Drop Can
+            </span>
+
+            <span className="hero-title-line hero-title-accent">
+              Save a Life.
+            </span>
           </h1>
 
           <p className="hero-description">
