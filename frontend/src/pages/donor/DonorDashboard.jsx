@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
+import "./DonorDashboard.css";
 
 function DonorDashboard() {
   const { user, token, login, logout } = useAuth();
@@ -11,18 +12,15 @@ function DonorDashboard() {
 
   const [requests, setRequests] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
-
-  const [availabilityLoading, setAvailabilityLoading] =
-    useState(false);
-
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [responseLoading, setResponseLoading] = useState(null);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // --------------------------------------------------
+  // ==========================================
   // FETCH ACTIVE BLOOD REQUESTS
-  // --------------------------------------------------
+  // ==========================================
 
   const fetchActiveRequests = async () => {
     try {
@@ -42,8 +40,7 @@ function DonorDashboard() {
         (request) =>
           request.bloodGroup?.toLowerCase() ===
             user?.bloodGroup?.toLowerCase() &&
-          request.city?.toLowerCase() ===
-            user?.city?.toLowerCase()
+          request.city?.toLowerCase() === user?.city?.toLowerCase()
       );
 
       setRequests(matchingRequests);
@@ -68,9 +65,9 @@ function DonorDashboard() {
     }
   }, [token, user?.bloodGroup, user?.city]);
 
-  // --------------------------------------------------
+  // ==========================================
   // AVAILABILITY
-  // --------------------------------------------------
+  // ==========================================
 
   const handleAvailabilityChange = async () => {
     try {
@@ -120,9 +117,9 @@ function DonorDashboard() {
     }
   };
 
-  // --------------------------------------------------
+  // ==========================================
   // ACCEPT / DECLINE REQUEST
-  // --------------------------------------------------
+  // ==========================================
 
   const handleRequestResponse = async (
     requestId,
@@ -145,14 +142,6 @@ function DonorDashboard() {
         }
       );
 
-      console.log(
-        "Blood request response successful:",
-        response.data
-      );
-
-      // IMPORTANT:
-      // Update the request locally instead of keeping
-      // Accept / Decline buttons visible.
       setRequests((currentRequests) =>
         currentRequests.map((request) => {
           if (request._id !== requestId) {
@@ -185,76 +174,85 @@ function DonorDashboard() {
     }
   };
 
-  // --------------------------------------------------
+  // ==========================================
   // LOGOUT
-  // --------------------------------------------------
+  // ==========================================
 
   const handleLogout = () => {
     logout();
   };
 
-  // --------------------------------------------------
+  // ==========================================
   // UI
-  // --------------------------------------------------
+  // ==========================================
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-semibold text-red-600">
-              Blood Donation Finder
-            </h1>
+    <div className="donor-page">
 
-            <p className="text-sm text-gray-500">
-              Donor Dashboard
+      {/* ======================================
+          HEADER
+      ====================================== */}
+
+    <header className="donor-header">
+      <div className="donor-brand">
+        <div className="donor-brand-icon">♥</div>
+
+        <div className="donor-brand-text">
+          <h1>Blood Donation Finder</h1>
+          <p>Donor Dashboard</p>
+        </div>
+      </div>
+
+      <div className="donor-header-right">
+        <div className="donor-user">
+          <span className="donor-user-label">Welcome back</span>
+          <strong>{user?.name || "Donor"}</strong>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="logout-btn"
+        >
+          Logout
+        </button>
+      </div>
+    </header>
+
+      {/* ======================================
+          MAIN
+      ====================================== */}
+
+      <main className="donor-container">
+
+        {/* Welcome */}
+
+        <section className="donor-welcome">
+          <h2>
+            Welcome back, {user?.name || "Donor"} 👋
+          </h2>
+
+          <p>
+            Manage your donation availability and
+            respond to blood requests near you.
+          </p>
+        </section>
+
+        {/* ====================================
+            PROFILE
+        ==================================== */}
+
+        <section className="donor-card">
+
+          <div className="card-heading">
+            <h3>My Profile</h3>
+
+            <p>
+              Your registered donor information
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              Welcome,{" "}
-              <strong>
-                {user?.name || "Donor"}
-              </strong>
-            </span>
+          <div className="profile-grid">
 
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-100"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main */}
-      <main className="max-w-6xl mx-auto px-6 py-10">
-        <h2 className="text-3xl font-semibold text-gray-900">
-          Donor Dashboard
-        </h2>
-
-        <p className="text-gray-500 mt-2">
-          Manage your donation availability and respond
-          to blood requests near you.
-        </p>
-
-        {/* ---------------------------------------- */}
-        {/* PROFILE */}
-        {/* ---------------------------------------- */}
-
-        <section className="bg-white border rounded-xl p-7 mt-8 shadow-sm">
-          <h3 className="text-xl font-medium">
-            My Profile
-          </h3>
-
-          <p className="text-gray-500 mt-1">
-            Your registered donor information
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-5 mt-6">
             <ProfileItem
               label="Name"
               value={user?.name || "N/A"}
@@ -267,7 +265,16 @@ function DonorDashboard() {
 
             <ProfileItem
               label="Blood Group"
-              value={user?.bloodGroup || "N/A"}
+              value={
+                <span className="blood-badge">
+                  {user?.bloodGroup || "N/A"}
+                </span>
+              }
+            />
+
+            <ProfileItem
+              label="Phone"
+              value={user?.phone || "N/A"}
             />
 
             <ProfileItem
@@ -279,59 +286,98 @@ function DonorDashboard() {
               label="Role"
               value={user?.role || "donor"}
             />
+
           </div>
         </section>
 
-        {/* ---------------------------------------- */}
-        {/* STATUS CARDS */}
-        {/* ---------------------------------------- */}
+        {/* ====================================
+            STATUS CARDS
+        ==================================== */}
 
-        <div className="grid md:grid-cols-2 gap-6 mt-6">
+        <div className="status-grid">
+
           {/* Verification */}
-          <section className="bg-white border rounded-xl p-6 shadow-sm">
-            <h3 className="text-lg font-medium">
-              Verification Status
-            </h3>
 
-            <div className="mt-5">
-              {user?.isVerified ? (
-                <div className="text-green-600 font-semibold">
-                  ✓ Verified Donor
-                </div>
-              ) : (
-                <div className="text-red-600">
-                  Your account is not verified by an
-                  admin yet.
-                </div>
-              )}
+          <section className="status-card">
+
+            <div className="status-card-top">
+
+              <div>
+                <p className="status-label">
+                  Account Verification
+                </p>
+
+                <h3>
+                  {user?.isVerified
+                    ? "Verified"
+                    : "Pending"}
+                </h3>
+              </div>
+
+              <div
+                className={`status-icon ${
+                  user?.isVerified
+                    ? "verified"
+                    : "pending"
+                }`}
+              >
+                {user?.isVerified ? "✓" : "!"}
+              </div>
+
             </div>
+
+            <p className="status-description">
+              {user?.isVerified
+                ? "Your donor account has been verified by an administrator."
+                : "Your account is waiting for administrator verification."}
+            </p>
+
           </section>
 
           {/* Availability */}
-          <section className="bg-white border rounded-xl p-6 shadow-sm">
-            <h3 className="text-lg font-medium">
-              Donation Availability
-            </h3>
 
-            <p className="mt-4">
-              Current Status:{" "}
-              <strong
-                className={
+          <section className="status-card">
+
+            <div className="status-card-top">
+
+              <div>
+                <p className="status-label">
+                  Donation Availability
+                </p>
+
+                <h3>
+                  {isAvailable
+                    ? "Available"
+                    : "Not Available"}
+                </h3>
+              </div>
+
+              <div
+                className={`status-icon ${
                   isAvailable
-                    ? "text-green-600"
-                    : "text-red-600"
-                }
+                    ? "available"
+                    : "unavailable"
+                }`}
               >
-                {isAvailable
-                  ? "Available"
-                  : "Not Available"}
-              </strong>
+                {isAvailable ? "✓" : "×"}
+              </div>
+
+            </div>
+
+            <p className="status-description">
+              {isAvailable
+                ? "Recipients can currently find you for matching blood requests."
+                : "You are currently unavailable for new blood requests."}
             </p>
 
             <button
               onClick={handleAvailabilityChange}
               disabled={availabilityLoading}
-              className="mt-4 px-5 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              className={`availability-btn ${
+                isAvailable
+                  ? "available-btn"
+                  : "unavailable-btn"
+              }`}
             >
               {availabilityLoading
                 ? "Updating..."
@@ -339,75 +385,94 @@ function DonorDashboard() {
                 ? "Mark as Not Available"
                 : "Mark as Available"}
             </button>
+
           </section>
+
         </div>
 
-        {/* ---------------------------------------- */}
-        {/* SUCCESS / ERROR */}
-        {/* ---------------------------------------- */}
+        {/* ====================================
+            MESSAGES
+        ==================================== */}
 
         {success && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
-            {success}
+          <div className="success-message">
+            ✓ {success}
           </div>
         )}
 
         {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-            {error}
+          <div className="error-message">
+            ⚠ {error}
           </div>
         )}
 
-        {/* ---------------------------------------- */}
-        {/* NOT VERIFIED MESSAGE */}
-        {/* ---------------------------------------- */}
+        {/* ====================================
+            VERIFICATION WARNING
+        ==================================== */}
 
         {!user?.isVerified && (
-          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700">
-            You must be verified by an admin before
+          <div className="verification-warning">
+            ⚠ You must be verified by an admin before
             responding to blood requests.
           </div>
         )}
 
-        {/* ---------------------------------------- */}
-        {/* ACTIVE REQUESTS */}
-        {/* ---------------------------------------- */}
+        {/* ====================================
+            MATCHING REQUESTS
+        ==================================== */}
 
-        <section className="bg-white border rounded-xl mt-8 shadow-sm overflow-hidden">
-          <div className="p-7 border-b">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-medium">
-                  Matching Blood Requests
-                </h3>
+        <section className="donor-card requests-card">
 
-                <p className="text-gray-500 mt-1">
-                  Requests matching your blood group
-                  and city
-                </p>
-              </div>
+          <div className="request-heading">
 
-              <span className="px-3 py-1 bg-red-100 text-red-600 rounded-full">
-                {requests.length}
-              </span>
+            <div className="card-heading">
+              <h3>Matching Blood Requests</h3>
+
+              <p>
+                Requests matching your blood group
+                and city
+              </p>
             </div>
+
+            <span className="request-count">
+              {requests.length}
+            </span>
+
           </div>
 
           {loadingRequests ? (
-            <div className="p-7">
-              <p className="text-gray-500">
-                Loading blood requests...
+
+            <div className="empty-state">
+              <div className="empty-icon">🩸</div>
+
+              <h4>Loading requests...</h4>
+
+              <p>
+                Searching for matching blood requests
+                near you.
               </p>
             </div>
+
           ) : requests.length === 0 ? (
-            <div className="p-7">
-              <p className="text-gray-500">
-                No active blood requests found.
+
+            <div className="empty-state">
+              <div className="empty-icon">🩸</div>
+
+              <h4>No matching requests</h4>
+
+              <p>
+                There are currently no active blood
+                requests matching your blood group and
+                city.
               </p>
             </div>
+
           ) : (
-            <div>
+
+            <div className="request-list">
+
               {requests.map((request) => {
+
                 const hasResponded =
                   request.donorResponseStatus ===
                     "accepted" ||
@@ -415,103 +480,110 @@ function DonorDashboard() {
                     "declined";
 
                 return (
-                  <div
+                  <article
                     key={request._id}
-                    className="p-7 border-b last:border-b-0"
+                    className="request-item"
                   >
-                    {/* Top */}
-                    <div className="flex justify-between items-start">
-                      <div className="flex gap-3">
-                        <span className="px-3 py-2 bg-red-100 text-red-600 font-semibold rounded-lg">
+
+                    {/* Request header */}
+
+                    <div className="request-top">
+
+                      <div>
+
+                        <span className="request-blood">
                           {request.bloodGroup}
                         </span>
 
                         <span
-                          className={
+                          className={`urgency ${
                             request.urgency === "urgent"
-                              ? "px-3 py-2 bg-red-50 text-red-600 rounded-lg"
-                              : "px-3 py-2 bg-gray-100 text-gray-600 rounded-lg"
-                          }
+                              ? "urgent"
+                              : "normal"
+                          }`}
                         >
                           {request.urgency}
                         </span>
+
                       </div>
 
-                      <span className="px-3 py-2 bg-green-100 text-green-700 rounded-lg">
+                      <span className="request-status">
                         {request.status}
                       </span>
+
                     </div>
 
                     {/* Details */}
-                    <div className="grid md:grid-cols-3 gap-6 mt-6">
-                      <div>
-                        <p className="text-sm text-gray-500">
-                          City
-                        </p>
 
-                        <p className="font-semibold mt-1">
+                    <div className="request-details">
+
+                      <div>
+                        <span>City</span>
+                        <strong>
                           {request.city}
-                        </p>
+                        </strong>
                       </div>
 
                       <div>
-                        <p className="text-sm text-gray-500">
-                          Hospital
-                        </p>
-
-                        <p className="font-semibold mt-1">
+                        <span>Hospital</span>
+                        <strong>
                           {request.hospital}
-                        </p>
+                        </strong>
                       </div>
 
                       <div>
-                        <p className="text-sm text-gray-500">
-                          Units Required
-                        </p>
-
-                        <p className="font-semibold mt-1">
+                        <span>Units Required</span>
+                        <strong>
                           {request.units}
-                        </p>
+                        </strong>
                       </div>
+
                     </div>
 
                     {/* Message */}
-                    {request.message && (
-                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-500">
-                          Message
-                        </p>
 
-                        <p className="mt-1 text-gray-700">
+                    {request.message && (
+                      <div className="request-message">
+
+                        <span>Message</span>
+
+                        <p>
                           {request.message}
                         </p>
+
                       </div>
                     )}
 
-                    {/* -------------------------------- */}
-                    {/* ACTION */}
-                    {/* -------------------------------- */}
+                    {/* Actions */}
 
-                    <div className="mt-6">
+                    <div className="request-actions">
+
                       {!user?.isVerified ? (
-                        <span className="text-red-600">
+
+                        <p className="verification-warning">
                           Verification required
-                        </span>
+                        </p>
+
                       ) : hasResponded ? (
-                        <div className="flex items-center gap-3">
-                          {request.donorResponseStatus ===
-                          "accepted" ? (
-                            <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium">
-                              ✓ Request Accepted
-                            </span>
-                          ) : (
-                            <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium">
-                              Request Declined
-                            </span>
-                          )}
-                        </div>
+
+                        request.donorResponseStatus ===
+                        "accepted" ? (
+
+                          <span className="request-status">
+                            ✓ Request Accepted
+                          </span>
+
+                        ) : (
+
+                          <span className="request-status">
+                            Request Declined
+                          </span>
+
+                        )
+
                       ) : (
-                        <div className="flex gap-3">
+
+                        <>
                           <button
                             onClick={() =>
                               handleRequestResponse(
@@ -523,7 +595,7 @@ function DonorDashboard() {
                               responseLoading ===
                               request._id
                             }
-                            className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                            className="accept-btn"
                           >
                             {responseLoading ===
                             request._id
@@ -542,41 +614,41 @@ function DonorDashboard() {
                               responseLoading ===
                               request._id
                             }
-                            className="px-5 py-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                            className="decline-btn"
                           >
                             {responseLoading ===
                             request._id
                               ? "Processing..."
                               : "Decline"}
                           </button>
-                        </div>
+                        </>
                       )}
+
                     </div>
-                  </div>
+
+                  </article>
                 );
               })}
+
             </div>
           )}
+
         </section>
+
       </main>
     </div>
   );
 }
 
-// --------------------------------------------------
+// ==========================================
 // PROFILE ITEM
-// --------------------------------------------------
+// ==========================================
 
 function ProfileItem({ label, value }) {
   return (
-    <div className="bg-gray-50 rounded-lg p-5">
-      <p className="text-sm text-gray-500">
-        {label}
-      </p>
-
-      <p className="font-semibold mt-2">
-        {value}
-      </p>
+    <div className="profile-item">
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }
