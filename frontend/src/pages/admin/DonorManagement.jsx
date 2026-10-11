@@ -1,6 +1,19 @@
+
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import "./DonorManagement.css";
+
+const BLOOD_GROUPS = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "AB+",
+  "AB-",
+  "O+",
+  "O-",
+];
 
 function DonorManagement() {
   const { token } = useAuth();
@@ -8,6 +21,8 @@ function DonorManagement() {
   const [donors, setDonors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingDonorId, setUpdatingDonorId] = useState(null);
+  const [actionError, setActionError] = useState("");
 
   const [bloodGroup, setBloodGroup] = useState("");
   const [city, setCity] = useState("");
@@ -25,15 +40,15 @@ function DonorManagement() {
         params.bloodGroup = filters.bloodGroup;
       }
 
-      if (filters.city) {
-        params.city = filters.city;
+      if (filters.city?.trim()) {
+        params.city = filters.city.trim();
       }
 
-      if (filters.isVerified !== "") {
+      if (filters.isVerified !== undefined && filters.isVerified !== "") {
         params.isVerified = filters.isVerified;
       }
 
-      if (filters.isAvailable !== "") {
+      if (filters.isAvailable !== undefined && filters.isAvailable !== "") {
         params.isAvailable = filters.isAvailable;
       }
 
@@ -44,13 +59,17 @@ function DonorManagement() {
         params,
       });
 
-      setDonors(response.data.donors);
-    } catch (error) {
-      console.error("Failed to fetch donors:", error);
+      setDonors(
+        Array.isArray(response.data.donors)
+          ? response.data.donors
+          : []
+      );
+    } catch (err) {
+      console.error("Failed to fetch donors:", err);
 
       setError(
-        error.response?.data?.message ||
-          "Failed to load donors"
+        err.response?.data?.message ||
+          "Failed to load donors. Please try again."
       );
     } finally {
       setLoading(false);
@@ -60,16 +79,22 @@ function DonorManagement() {
   useEffect(() => {
     if (token) {
       fetchDonors();
+    } else {
+      setLoading(false);
+      setError("Please log in to access donor management.");
     }
   }, [token]);
 
-  const handleApplyFilters = () => {
-    fetchDonors({
-      bloodGroup,
-      city,
-      isVerified,
-      isAvailable,
-    });
+  const getCurrentFilters = () => ({
+    bloodGroup,
+    city,
+    isVerified,
+    isAvailable,
+  });
+
+  const handleApplyFilters = (event) => {
+    event.preventDefault();
+    fetchDonors(getCurrentFilters());
   };
 
   const handleClearFilters = () => {
@@ -77,17 +102,17 @@ function DonorManagement() {
     setCity("");
     setIsVerified("");
     setIsAvailable("");
-
-    fetchDonors();
+    fetchDonors({});
   };
 
   const handleVerification = async (userId, verified) => {
     try {
+      setUpdatingDonorId(userId);
+      setActionError("");
+
       await api.patch(
         `/admin/donors/${userId}/verification`,
-        {
-          isVerified: verified,
-        },
+        { isVerified: verified },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -95,277 +120,352 @@ function DonorManagement() {
         }
       );
 
-      fetchDonors({
-        bloodGroup,
-        city,
-        isVerified,
-        isAvailable,
-      });
-    } catch (error) {
-      console.error("Verification update failed:", error);
+      await fetchDonors(getCurrentFilters());
+    } catch (err) {
+      console.error("Verification update failed:", err);
 
-      alert(
-        error.response?.data?.message ||
-          "Failed to update verification"
+      setActionError(
+        err.response?.data?.message ||
+          "Failed to update donor verification. Please try again."
       );
+    } finally {
+      setUpdatingDonorId(null);
     }
   };
 
-  if (loading) {
+  const verifiedCount = donors.filter(
+    (donor) => donor.isVerified
+  ).length;
+
+  const availableCount = donors.filter(
+    (donor) => donor.isAvailable
+  ).length;
+
+  const pendingCount = donors.filter(
+    (donor) => !donor.isVerified
+  ).length;
+
+  if (loading && donors.length === 0) {
     return (
-      <div className="flex justify-center items-center min-h-[300px]">
-        <p className="text-gray-500">Loading donors...</p>
+      <div className="donor-management">
+        <div className="dm-state" role="status">
+          <span className="dm-spinner" />
+          <p>Loading donors...</p>
+        </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && donors.length === 0) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4">
-        {error}
+      <div className="donor-management">
+        <div className="dm-error" role="alert">
+          <strong>Unable to load donors</strong>
+          <p>{error}</p>
+          <button
+            type="button"
+            className="dm-button dm-button-primary"
+            onClick={() => fetchDonors(getCurrentFilters())}
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Donor Management
-        </h1>
+    <div className="donor-management">
+      {/* Page Header */}
+      <header className="dm-header">
+        <div>
+          <span className="dm-eyebrow">ADMINISTRATION</span>
+          <h1>Donor Management</h1>
+          <p>
+            Manage donor verification, monitor availability, and
+            find registered donors.
+          </p>
+        </div>
 
-        <p className="text-gray-500 mt-1">
-          Manage donor verification, availability and search
-          registered donors.
-        </p>
-      </div>
+        <button
+          type="button"
+          className="dm-button dm-button-secondary dm-refresh-button"
+          onClick={() => fetchDonors(getCurrentFilters())}
+          disabled={loading}
+        >
+          <span aria-hidden="true">↻</span>
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+      </header>
 
-      {/* Summary */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-        <p className="text-sm text-gray-500">
-          Total Donors
-        </p>
+      {/* Summary Cards */}
+      <section className="dm-summary-grid" aria-label="Donor statistics">
+        <div className="dm-summary-card">
+          <div className="dm-summary-icon dm-icon-total" aria-hidden="true">
+            <span>♙</span>
+          </div>
+          <div>
+            <p className="dm-summary-label">Total Donors</p>
+            <p className="dm-summary-value">{donors.length}</p>
+          </div>
+        </div>
 
-        <p className="text-3xl font-bold text-gray-900 mt-1">
-          {donors.length}
-        </p>
-      </div>
+        <div className="dm-summary-card">
+          <div className="dm-summary-icon dm-icon-verified" aria-hidden="true">
+            <span>✓</span>
+          </div>
+          <div>
+            <p className="dm-summary-label">Verified</p>
+            <p className="dm-summary-value">{verifiedCount}</p>
+          </div>
+        </div>
+
+        <div className="dm-summary-card">
+          <div className="dm-summary-icon dm-icon-available" aria-hidden="true">
+            <span>♥</span>
+          </div>
+          <div>
+            <p className="dm-summary-label">Available</p>
+            <p className="dm-summary-value">{availableCount}</p>
+          </div>
+        </div>
+
+        <div className="dm-summary-card">
+          <div className="dm-summary-icon dm-icon-pending" aria-hidden="true">
+            <span>!</span>
+          </div>
+          <div>
+            <p className="dm-summary-label">Pending Verification</p>
+            <p className="dm-summary-value">{pendingCount}</p>
+          </div>
+        </div>
+      </section>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800 mb-5">
-          Filter Donors
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Blood Group */}
+      <section className="dm-filter-card">
+        <div className="dm-section-heading">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Blood Group
-            </label>
-
-            <select
-              value={bloodGroup}
-              onChange={(e) => setBloodGroup(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="">All</option>
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
-            </select>
-          </div>
-
-          {/* City */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              City
-            </label>
-
-            <input
-              type="text"
-              value={city}
-              placeholder="Enter city"
-              onChange={(e) => setCity(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
-          </div>
-
-          {/* Verification */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Verification
-            </label>
-
-            <select
-              value={isVerified}
-              onChange={(e) => setIsVerified(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="">All</option>
-              <option value="true">Verified</option>
-              <option value="false">Not Verified</option>
-            </select>
-          </div>
-
-          {/* Availability */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Availability
-            </label>
-
-            <select
-              value={isAvailable}
-              onChange={(e) => setIsAvailable(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-red-500"
-            >
-              <option value="">All</option>
-              <option value="true">Available</option>
-              <option value="false">Not Available</option>
-            </select>
+            <h2>Find Donors</h2>
+            <p>Filter donors using their blood group, city, and status.</p>
           </div>
         </div>
 
-        {/* Filter buttons */}
-        <div className="flex gap-3 mt-5">
-          <button
-            onClick={handleApplyFilters}
-            className="px-5 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition"
-          >
-            Apply Filters
-          </button>
+        <form onSubmit={handleApplyFilters}>
+          <div className="dm-filter-grid">
+            <div className="dm-field">
+              <label htmlFor="dm-blood-group">Blood Group</label>
+              <select
+                id="dm-blood-group"
+                value={bloodGroup}
+                onChange={(event) => setBloodGroup(event.target.value)}
+              >
+                <option value="">All blood groups</option>
+                {BLOOD_GROUPS.map((group) => (
+                  <option key={group} value={group}>
+                    {group}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <button
-            onClick={handleClearFilters}
-            className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-100 transition"
-          >
-            Clear
-          </button>
+            <div className="dm-field">
+              <label htmlFor="dm-city">City</label>
+              <input
+                id="dm-city"
+                type="text"
+                value={city}
+                placeholder="Enter city name"
+                onChange={(event) => setCity(event.target.value)}
+              />
+            </div>
+
+            <div className="dm-field">
+              <label htmlFor="dm-verification">Verification</label>
+              <select
+                id="dm-verification"
+                value={isVerified}
+                onChange={(event) => setIsVerified(event.target.value)}
+              >
+                <option value="">All statuses</option>
+                <option value="true">Verified</option>
+                <option value="false">Not verified</option>
+              </select>
+            </div>
+
+            <div className="dm-field">
+              <label htmlFor="dm-availability">Availability</label>
+              <select
+                id="dm-availability"
+                value={isAvailable}
+                onChange={(event) => setIsAvailable(event.target.value)}
+              >
+                <option value="">All statuses</option>
+                <option value="true">Available</option>
+                <option value="false">Unavailable</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="dm-filter-actions">
+            <button
+              type="submit"
+              className="dm-button dm-button-primary"
+              disabled={loading}
+            >
+              Apply Filters
+            </button>
+
+            <button
+              type="button"
+              className="dm-button dm-button-secondary"
+              onClick={handleClearFilters}
+              disabled={loading}
+            >
+              Clear Filters
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* Donor List */}
+      <section className="dm-table-card">
+        <div className="dm-table-heading">
+          <div>
+            <h2>Registered Donors</h2>
+            <p>Review donor details and manage verification.</p>
+          </div>
+
+          <span className="dm-result-count">
+            {donors.length} {donors.length === 1 ? "donor" : "donors"}
+          </span>
         </div>
-      </div>
 
-      {/* Donor table */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        {actionError && (
+          <div className="dm-inline-error" role="alert">
+            {actionError}
+            <button
+              type="button"
+              onClick={() => setActionError("")}
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {error && donors.length > 0 && (
+          <div className="dm-inline-error" role="alert">
+            {error}
+          </div>
+        )}
+
+        {loading && donors.length > 0 && (
+          <div className="dm-loading-strip" role="status">
+            Refreshing donor list...
+          </div>
+        )}
+
         {donors.length === 0 ? (
-          <div className="p-10 text-center">
-            <p className="text-gray-500">
-              No donors found.
+          <div className="dm-state">
+            <div className="dm-empty-icon" aria-hidden="true">
+              ♡
+            </div>
+            <h3>No donors found</h3>
+            <p>
+              Try changing your filters or clear them to see all donors.
             </p>
+            <button
+              type="button"
+              className="dm-button dm-button-secondary"
+              onClick={handleClearFilters}
+            >
+              Clear Filters
+            </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+          <div className="dm-table-wrapper">
+            <table className="dm-table">
+              <thead>
                 <tr>
-                  <th className="text-left px-5 py-4 font-semibold text-gray-700">
-                    Name
-                  </th>
-
-                  <th className="text-left px-5 py-4 font-semibold text-gray-700">
-                    Email
-                  </th>
-
-                  <th className="text-left px-5 py-4 font-semibold text-gray-700">
-                    Blood Group
-                  </th>
-
-                  <th className="text-left px-5 py-4 font-semibold text-gray-700">
-                    Phone
-                  </th>
-
-                  <th className="text-left px-5 py-4 font-semibold text-gray-700">
-                    City
-                  </th>
-
-                  <th className="text-left px-5 py-4 font-semibold text-gray-700">
-                    Verified
-                  </th>
-
-                  <th className="text-left px-5 py-4 font-semibold text-gray-700">
-                    Available
-                  </th>
-
-                  <th className="text-left px-5 py-4 font-semibold text-gray-700">
-                    Action
-                  </th>
+                  <th scope="col">Donor</th>
+                  <th scope="col">Blood Group</th>
+                  <th scope="col">Contact</th>
+                  <th scope="col">City</th>
+                  <th scope="col">Verification</th>
+                  <th scope="col">Availability</th>
+                  <th scope="col">Action</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {donors.map((donor) => (
-                  <tr
-                    key={donor._id}
-                    className="hover:bg-gray-50 transition"
-                  >
-                    <td className="px-5 py-4 font-medium text-gray-900">
-                      {donor.name}
+                  <tr key={donor._id}>
+                    <td>
+                      <div className="dm-donor-cell">
+                        <div className="dm-avatar" aria-hidden="true">
+                          {(donor.name || "D").trim().charAt(0).toUpperCase()}
+                        </div>
+                        <div className="dm-donor-details">
+                          <span className="dm-donor-name">
+                            {donor.name || "Unnamed donor"}
+                          </span>
+                          <span className="dm-donor-email">
+                            {donor.email || "No email"}
+                          </span>
+                        </div>
+                      </div>
                     </td>
 
-                    <td className="px-5 py-4 text-gray-600">
-                      {donor.email}
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <span className="inline-flex items-center justify-center min-w-12 px-2.5 py-1 rounded-full bg-red-50 text-red-600 font-semibold">
-                        {donor.bloodGroup}
+                    <td>
+                      <span className="dm-blood-group">
+                        {donor.bloodGroup || "N/A"}
                       </span>
                     </td>
 
-                    <td className="px-5 py-4 text-gray-600">
-                      {donor.phone}
-                    </td>
+                    <td>{donor.phone || "—"}</td>
 
-                    <td className="px-5 py-4 text-gray-600">
-                      {donor.city}
-                    </td>
+                    <td>{donor.city || "—"}</td>
 
-                    <td className="px-5 py-4">
-                      {donor.isVerified ? (
-                        <span className="px-2.5 py-1 rounded-full bg-green-50 text-green-700 font-medium">
-                          Verified
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">
-                          Not Verified
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-5 py-4">
-                      {donor.isAvailable ? (
-                        <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
-                          Available
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">
-                          Unavailable
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <button
-                        onClick={() =>
-                          handleVerification(
-                            donor._id,
-                            !donor.isVerified
-                          )
-                        }
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                    <td>
+                      <span
+                        className={`dm-status ${
                           donor.isVerified
-                            ? "border border-gray-300 text-gray-700 hover:bg-gray-100"
-                            : "bg-red-600 text-white hover:bg-red-700"
+                            ? "dm-status-verified"
+                            : "dm-status-unverified"
                         }`}
                       >
-                        {donor.isVerified
-                          ? "Unverify"
-                          : "Verify"}
+                        {donor.isVerified ? "Verified" : "Pending"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                        className={`dm-status ${
+                          donor.isAvailable
+                            ? "dm-status-available"
+                            : "dm-status-unavailable"
+                        }`}
+                      >
+                        {donor.isAvailable ? "Available" : "Unavailable"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleVerification(donor._id, !donor.isVerified)
+                        }
+                        disabled={updatingDonorId === donor._id}
+                        className={`dm-verify-button ${
+                          donor.isVerified ? "dm-unverify-button" : ""
+                        }`}
+                      >
+                        {updatingDonorId === donor._id
+                          ? "Updating..."
+                          : donor.isVerified
+                            ? "Unverify"
+                            : "Verify"}
                       </button>
                     </td>
                   </tr>
@@ -374,7 +474,7 @@ function DonorManagement() {
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

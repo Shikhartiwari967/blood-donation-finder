@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import "./AdminDashboard.css";
 
 function AdminDashboard() {
   const { user } = useAuth();
@@ -31,41 +32,40 @@ function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-gray-500">Loading dashboard...</p>
+      <div className="admin-dashboard-loading">
+        Loading dashboard...
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4">
+      <div className="admin-dashboard-error">
         {error}
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Admin Dashboard
-        </h1>
+    <div className="admin-dashboard">
 
-        <p className="mt-1 text-gray-500">
+      {/* Header */}
+      <div className="admin-dashboard-header">
+        <h1>Admin Dashboard</h1>
+
+        <p>
           Welcome back, {user?.name}. Here's an overview of the
           blood donation system.
         </p>
       </div>
 
       {/* Users */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+      <section className="admin-dashboard-section">
+        <h2 className="admin-dashboard-section-title">
           Users
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="admin-stats-grid">
           <StatCard
             title="Total Users"
             value={stats.users.total}
@@ -89,12 +89,12 @@ function AdminDashboard() {
       </section>
 
       {/* Donors */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+      <section className="admin-dashboard-section">
+        <h2 className="admin-dashboard-section-title">
           Donors
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="admin-stats-grid two">
           <StatCard
             title="Verified Donors"
             value={stats.donors.verified}
@@ -108,12 +108,12 @@ function AdminDashboard() {
       </section>
 
       {/* Blood Requests */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+      <section className="admin-dashboard-section">
+        <h2 className="admin-dashboard-section-title">
           Blood Requests
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="admin-stats-grid">
           <StatCard
             title="Total Requests"
             value={stats.requests.total}
@@ -137,30 +137,31 @@ function AdminDashboard() {
       </section>
 
       {/* Notifications */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+      <section className="admin-dashboard-section">
+        <h2 className="admin-dashboard-section-title">
           Notifications
         </h2>
 
-        <div className="max-w-sm">
+        <div className="admin-stats-grid one">
           <StatCard
             title="Total Notifications"
             value={stats.notifications.total}
           />
         </div>
       </section>
+
     </div>
   );
 }
 
 function StatCard({ title, value }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
-      <p className="text-sm font-medium text-gray-500">
+    <div className="admin-stat-card">
+      <p className="admin-stat-title">
         {title}
       </p>
 
-      <p className="text-3xl font-bold text-gray-900 mt-2">
+      <p className="admin-stat-value">
         {value}
       </p>
     </div>

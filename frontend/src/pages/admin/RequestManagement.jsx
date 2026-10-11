@@ -1,6 +1,12 @@
-import { useEffect, useState } from "react";
+
+import { useCallback, useEffect, useState } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import "./RequestManagement.css";
+
+const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const requestStatuses = ["active", "fulfilled", "cancelled"];
+const urgencyLevels = ["normal", "urgent", "critical"];
 
 function RequestManagement() {
   const { token } = useAuth();
@@ -8,68 +14,60 @@ function RequestManagement() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingId, setUpdatingId] = useState("");
 
   const [bloodGroup, setBloodGroup] = useState("");
   const [city, setCity] = useState("");
   const [status, setStatus] = useState("");
   const [urgency, setUrgency] = useState("");
 
-  const fetchRequests = async (filters = {}) => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const params = {};
-
-      if (filters.bloodGroup) {
-        params.bloodGroup = filters.bloodGroup;
+  const fetchRequests = useCallback(
+    async (filters = {}) => {
+      if (!token) {
+        setLoading(false);
+        return;
       }
 
-      if (filters.city) {
-        params.city = filters.city;
+      try {
+        setLoading(true);
+        setError("");
+
+        const params = {};
+
+        if (filters.bloodGroup) params.bloodGroup = filters.bloodGroup;
+        if (filters.city?.trim()) params.city = filters.city.trim();
+        if (filters.status) params.status = filters.status;
+        if (filters.urgency) params.urgency = filters.urgency;
+
+        const response = await api.get("/admin/requests", {
+          headers: { Authorization: `Bearer ${token}` },
+          params,
+        });
+
+        setRequests(
+          Array.isArray(response.data.requests)
+            ? response.data.requests
+            : []
+        );
+      } catch (err) {
+        console.error("Failed to fetch requests:", err);
+        setError(
+          err.response?.data?.message || "Failed to load blood requests."
+        );
+      } finally {
+        setLoading(false);
       }
-
-      if (filters.status) {
-        params.status = filters.status;
-      }
-
-      if (filters.urgency) {
-        params.urgency = filters.urgency;
-      }
-
-      const response = await api.get("/admin/requests", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params,
-      });
-
-      setRequests(response.data.requests);
-    } catch (error) {
-      console.error("Failed to fetch requests:", error);
-
-      setError(
-        error.response?.data?.message ||
-          "Failed to load blood requests"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [token]
+  );
 
   useEffect(() => {
-    if (token) {
-      fetchRequests();
-    }
-  }, [token]);
+    fetchRequests();
+  }, [fetchRequests]);
 
-  const handleApplyFilters = () => {
-    fetchRequests({
-      bloodGroup,
-      city,
-      status,
-      urgency,
-    });
+  const handleApplyFilters = (event) => {
+    event.preventDefault();
+    fetchRequests({ bloodGroup, city, status, urgency });
   };
 
   const handleClearFilters = () => {
@@ -77,287 +75,251 @@ function RequestManagement() {
     setCity("");
     setStatus("");
     setUrgency("");
-
     fetchRequests();
   };
 
   const handleStatusChange = async (requestId, newStatus) => {
+    const request = requests.find((item) => item._id === requestId);
+
+    if (!request || request.status === newStatus) return;
+
     try {
+      setUpdatingId(requestId);
+      setError("");
+
       await api.patch(
         `/admin/requests/${requestId}/status`,
-        {
-          status: newStatus,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      fetchRequests({
-        bloodGroup,
-        city,
-        status,
-        urgency,
-      });
-    } catch (error) {
-      console.error("Status update failed:", error);
-
-      alert(
-        error.response?.data?.message ||
-          "Failed to update request status"
+      await fetchRequests({ bloodGroup, city, status, urgency });
+    } catch (err) {
+      console.error("Status update failed:", err);
+      setError(
+        err.response?.data?.message || "Failed to update request status."
       );
+    } finally {
+      setUpdatingId("");
     }
   };
 
-  if (loading) {
-    return (
-      <div style={styles.centerMessage}>
-        Loading blood requests...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={styles.errorMessage}>
-        {error}
-      </div>
-    );
-  }
+  const counts = {
+    active: requests.filter((request) => request.status === "active").length,
+    fulfilled: requests.filter((request) => request.status === "fulfilled").length,
+    cancelled: requests.filter((request) => request.status === "cancelled").length,
+  };
 
   return (
-    <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
+    <div className="request-management">
+      <header className="rm-header">
         <div>
-          <h1 style={styles.title}>
-            Blood Request Management
-          </h1>
-
-          <p style={styles.subtitle}>
-            Manage blood requests, monitor urgency and update request status.
+          <span className="rm-eyebrow">ADMINISTRATION</span>
+          <h1>Blood Request Management</h1>
+          <p>
+            Review requests, monitor urgency, and manage request statuses.
           </p>
         </div>
-      </div>
 
-      {/* Total Requests */}
-      <div style={styles.totalCard}>
-        <p style={styles.cardLabel}>Total Requests</p>
-        <h2 style={styles.cardNumber}>
-          {requests.length}
-        </h2>
-      </div>
+        <button
+          type="button"
+          className="rm-button rm-button-secondary rm-refresh"
+          onClick={() => fetchRequests({ bloodGroup, city, status, urgency })}
+          disabled={loading}
+        >
+          <span aria-hidden="true">↻</span>
+          {loading ? "Loading..." : "Refresh"}
+        </button>
+      </header>
 
-      {/* Filters */}
-      <div style={styles.filterCard}>
-        <h2 style={styles.sectionTitle}>
-          Filter Requests
-        </h2>
+      <section className="rm-summary-grid" aria-label="Request statistics">
+        <SummaryCard label="Requests Found" value={requests.length} type="total" />
+        <SummaryCard label="Active" value={counts.active} type="active" />
+        <SummaryCard label="Fulfilled" value={counts.fulfilled} type="fulfilled" />
+        <SummaryCard label="Cancelled" value={counts.cancelled} type="cancelled" />
+      </section>
 
-        <div style={styles.filterGrid}>
-          {/* Blood Group */}
-          <div style={styles.field}>
-            <label style={styles.label}>
-              Blood Group
-            </label>
+      <form className="rm-filter-card" onSubmit={handleApplyFilters}>
+        <div className="rm-section-heading">
+          <h2>Filter Requests</h2>
+          <p>Filter by blood group, location, status, or urgency.</p>
+        </div>
 
+        <div className="rm-filter-grid">
+          <div className="rm-field">
+            <label htmlFor="rm-blood-group">Blood Group</label>
             <select
-              style={styles.input}
+              id="rm-blood-group"
               value={bloodGroup}
-              onChange={(e) =>
-                setBloodGroup(e.target.value)
-              }
+              onChange={(event) => setBloodGroup(event.target.value)}
             >
-              <option value="">All</option>
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
+              <option value="">All blood groups</option>
+              {bloodGroups.map((group) => (
+                <option key={group} value={group}>{group}</option>
+              ))}
             </select>
           </div>
 
-          {/* City */}
-          <div style={styles.field}>
-            <label style={styles.label}>
-              City
-            </label>
-
+          <div className="rm-field">
+            <label htmlFor="rm-city">City</label>
             <input
-              type="text"
-              style={styles.input}
+              id="rm-city"
               value={city}
+              onChange={(event) => setCity(event.target.value)}
               placeholder="Enter city"
-              onChange={(e) =>
-                setCity(e.target.value)
-              }
             />
           </div>
 
-          {/* Status */}
-          <div style={styles.field}>
-            <label style={styles.label}>
-              Status
-            </label>
-
+          <div className="rm-field">
+            <label htmlFor="rm-status">Status</label>
             <select
-              style={styles.input}
+              id="rm-status"
               value={status}
-              onChange={(e) =>
-                setStatus(e.target.value)
-              }
+              onChange={(event) => setStatus(event.target.value)}
             >
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="fulfilled">Fulfilled</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="">All statuses</option>
+              {requestStatuses.map((item) => (
+                <option key={item} value={item}>
+                  {item.charAt(0).toUpperCase() + item.slice(1)}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* Urgency */}
-          <div style={styles.field}>
-            <label style={styles.label}>
-              Urgency
-            </label>
-
+          <div className="rm-field">
+            <label htmlFor="rm-urgency">Urgency</label>
             <select
-              style={styles.input}
+              id="rm-urgency"
               value={urgency}
-              onChange={(e) =>
-                setUrgency(e.target.value)
-              }
+              onChange={(event) => setUrgency(event.target.value)}
             >
-              <option value="">All</option>
-              <option value="urgent">Urgent</option>
-              <option value="normal">Normal</option>
+              <option value="">All urgency levels</option>
+              {urgencyLevels.map((item) => (
+                <option key={item} value={item}>
+                  {item.charAt(0).toUpperCase() + item.slice(1)}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
-        {/* Buttons */}
-        <div style={styles.buttonRow}>
-          <button
-            style={styles.primaryButton}
-            onClick={handleApplyFilters}
-          >
+        <div className="rm-filter-actions">
+          <button className="rm-button rm-button-primary" type="submit">
             Apply Filters
           </button>
-
           <button
-            style={styles.secondaryButton}
+            className="rm-button rm-button-secondary"
+            type="button"
             onClick={handleClearFilters}
           >
-            Clear
+            Clear Filters
           </button>
         </div>
-      </div>
+      </form>
 
-      {/* Table */}
-      <div style={styles.tableCard}>
-        {requests.length === 0 ? (
-          <div style={styles.emptyState}>
-            No blood requests found.
+      {error && (
+        <div className="rm-error" role="alert">
+          <span>{error}</span>
+          <button type="button" onClick={() => setError("")} aria-label="Dismiss error">
+            ×
+          </button>
+        </div>
+      )}
+
+      <section className="rm-table-card">
+        <div className="rm-table-heading">
+          <div>
+            <h2>Blood Requests</h2>
+            <p>Requesters, locations, urgency, and current status.</p>
+          </div>
+          <span className="rm-result-count">
+            {requests.length} {requests.length === 1 ? "request" : "requests"}
+          </span>
+        </div>
+
+        {loading ? (
+          <div className="rm-state">
+            <span className="rm-spinner" />
+            <p>Loading blood requests...</p>
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="rm-state">
+            <span className="rm-empty-icon" aria-hidden="true">⌕</span>
+            <h3>No requests found</h3>
+            <p>Try changing your filters or clearing them to see all requests.</p>
+            <button
+              type="button"
+              className="rm-button rm-button-secondary"
+              onClick={handleClearFilters}
+            >
+              Clear Filters
+            </button>
           </div>
         ) : (
-          <div style={styles.tableWrapper}>
-            <table style={styles.table}>
+          <div className="rm-table-wrapper">
+            <table className="rm-table">
               <thead>
                 <tr>
-                  <th style={styles.th}>Requester</th>
-                  <th style={styles.th}>Email</th>
-                  <th style={styles.th}>Blood Group</th>
-                  <th style={styles.th}>City</th>
-                  <th style={styles.th}>Hospital</th>
-                  <th style={styles.th}>Units</th>
-                  <th style={styles.th}>Urgency</th>
-                  <th style={styles.th}>Status</th>
-                  <th style={styles.th}>Action</th>
+                  <th>Requester</th>
+                  <th>Email</th>
+                  <th>Blood Group</th>
+                  <th>City</th>
+                  <th>Hospital</th>
+                  <th>Units</th>
+                  <th>Urgency</th>
+                  <th>Status</th>
+                  <th>Update Status</th>
                 </tr>
               </thead>
 
               <tbody>
                 {requests.map((request) => (
                   <tr key={request._id}>
-                    <td style={styles.td}>
-                      {request.requester?.name || "N/A"}
+                    <td>
+                      <span className="rm-requester-name">
+                        {request.requester?.name || "N/A"}
+                      </span>
                     </td>
-
-                    <td style={styles.td}>
+                    <td className="rm-email">
                       {request.requester?.email || "N/A"}
                     </td>
-
-                    <td style={styles.td}>
-                      <span style={styles.bloodBadge}>
-                        {request.bloodGroup}
+                    <td>
+                      <span className="rm-blood-badge">
+                        {request.bloodGroup || "N/A"}
                       </span>
                     </td>
-
-                    <td style={styles.td}>
-                      {request.city}
-                    </td>
-
-                    <td style={styles.td}>
-                      {request.hospital}
-                    </td>
-
-                    <td style={styles.td}>
-                      {request.units}
-                    </td>
-
-                    <td style={styles.td}>
-                      <span
-                        style={
-                          request.urgency === "urgent"
-                            ? styles.urgentBadge
-                            : styles.normalBadge
-                        }
-                      >
-                        {request.urgency}
+                    <td>{request.city || "N/A"}</td>
+                    <td className="rm-hospital">{request.hospital || "N/A"}</td>
+                    <td>{request.units ?? "—"}</td>
+                    <td>
+                      <span className={`rm-badge rm-urgency-${request.urgency || "normal"}`}>
+                        {request.urgency || "normal"}
                       </span>
                     </td>
-
-                    <td style={styles.td}>
-                      <span
-                        style={
-                          request.status === "fulfilled"
-                            ? styles.fulfilledBadge
-                            : request.status === "cancelled"
-                            ? styles.cancelledBadge
-                            : styles.activeBadge
-                        }
-                      >
-                        {request.status}
+                    <td>
+                      <span className={`rm-badge rm-status-${request.status || "active"}`}>
+                        {request.status || "active"}
                       </span>
                     </td>
-
-                    <td style={styles.td}>
+                    <td>
                       <select
-                        style={styles.actionSelect}
+                        className="rm-action-select"
+                        aria-label={`Update request status for ${request.requester?.name || "request"}`}
                         value={request.status}
-                        onChange={(e) =>
-                          handleStatusChange(
-                            request._id,
-                            e.target.value
-                          )
+                        disabled={updatingId === request._id}
+                        onChange={(event) =>
+                          handleStatusChange(request._id, event.target.value)
                         }
                       >
-                        <option value="active">
-                          Active
-                        </option>
-
-                        <option value="fulfilled">
-                          Fulfilled
-                        </option>
-
-                        <option value="cancelled">
-                          Cancelled
-                        </option>
+                        {requestStatuses.map((item) => (
+                          <option key={item} value={item}>
+                            {item.charAt(0).toUpperCase() + item.slice(1)}
+                          </option>
+                        ))}
                       </select>
+                      {updatingId === request._id && (
+                        <span className="rm-updating">Saving…</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -365,244 +327,23 @@ function RequestManagement() {
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
 
-const styles = {
-  page: {
-    padding: "36px 32px",
-    backgroundColor: "#f5f6f8",
-    minHeight: "100%",
-    boxSizing: "border-box",
-  },
-
-  header: {
-    marginBottom: "28px",
-  },
-
-  title: {
-    margin: 0,
-    fontSize: "30px",
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-
-  subtitle: {
-    marginTop: "8px",
-    color: "#64748b",
-    fontSize: "16px",
-  },
-
-  totalCard: {
-    backgroundColor: "#ffffff",
-    border: "1px solid #e2e8f0",
-    borderRadius: "12px",
-    padding: "22px",
-    marginBottom: "24px",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
-  },
-
-  cardLabel: {
-    margin: 0,
-    color: "#64748b",
-    fontSize: "14px",
-  },
-
-  cardNumber: {
-    margin: "8px 0 0",
-    fontSize: "32px",
-    color: "#0f172a",
-  },
-
-  filterCard: {
-    backgroundColor: "#ffffff",
-    border: "1px solid #e2e8f0",
-    borderRadius: "12px",
-    padding: "28px 24px",
-    marginBottom: "24px",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
-  },
-
-  sectionTitle: {
-    margin: "0 0 24px",
-    fontSize: "20px",
-    color: "#0f172a",
-  },
-
-  filterGrid: {
-    display: "grid",
-    gridTemplateColumns:
-      "repeat(4, minmax(150px, 1fr))",
-    gap: "16px",
-  },
-
-  field: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "8px",
-  },
-
-  label: {
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#334155",
-  },
-
-  input: {
-    width: "100%",
-    height: "44px",
-    padding: "0 12px",
-    boxSizing: "border-box",
-    border: "1px solid #cbd5e1",
-    borderRadius: "8px",
-    backgroundColor: "#ffffff",
-    color: "#0f172a",
-    fontSize: "14px",
-    outline: "none",
-  },
-
-  buttonRow: {
-    display: "flex",
-    gap: "12px",
-    marginTop: "24px",
-  },
-
-  primaryButton: {
-    border: "none",
-    borderRadius: "8px",
-    padding: "12px 20px",
-    backgroundColor: "#ef1111",
-    color: "#ffffff",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-
-  secondaryButton: {
-    border: "1px solid #cbd5e1",
-    borderRadius: "8px",
-    padding: "12px 20px",
-    backgroundColor: "#ffffff",
-    color: "#334155",
-    fontWeight: "600",
-    cursor: "pointer",
-  },
-
-  tableCard: {
-    backgroundColor: "#ffffff",
-    border: "1px solid #e2e8f0",
-    borderRadius: "12px",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.08)",
-    overflow: "hidden",
-  },
-
-  tableWrapper: {
-    width: "100%",
-    overflowX: "auto",
-  },
-
-  table: {
-    width: "100%",
-    minWidth: "1050px",
-    borderCollapse: "collapse",
-  },
-
-  th: {
-    textAlign: "left",
-    padding: "16px 14px",
-    fontSize: "13px",
-    fontWeight: "600",
-    color: "#475569",
-    borderBottom: "1px solid #e2e8f0",
-    backgroundColor: "#f8fafc",
-  },
-
-  td: {
-    padding: "15px 14px",
-    fontSize: "14px",
-    color: "#334155",
-    borderBottom: "1px solid #e2e8f0",
-  },
-
-  bloodBadge: {
-    display: "inline-block",
-    padding: "4px 9px",
-    borderRadius: "6px",
-    backgroundColor: "#fee2e2",
-    color: "#b91c1c",
-    fontWeight: "600",
-  },
-
-  urgentBadge: {
-    display: "inline-block",
-    padding: "4px 9px",
-    borderRadius: "6px",
-    backgroundColor: "#fee2e2",
-    color: "#b91c1c",
-    fontWeight: "600",
-  },
-
-  normalBadge: {
-    display: "inline-block",
-    padding: "4px 9px",
-    borderRadius: "6px",
-    backgroundColor: "#f1f5f9",
-    color: "#475569",
-    fontWeight: "600",
-  },
-
-  activeBadge: {
-    display: "inline-block",
-    padding: "4px 9px",
-    borderRadius: "6px",
-    backgroundColor: "#fef3c7",
-    color: "#92400e",
-    fontWeight: "600",
-  },
-
-  fulfilledBadge: {
-    display: "inline-block",
-    padding: "4px 9px",
-    borderRadius: "6px",
-    backgroundColor: "#dcfce7",
-    color: "#166534",
-    fontWeight: "600",
-  },
-
-  cancelledBadge: {
-    display: "inline-block",
-    padding: "4px 9px",
-    borderRadius: "6px",
-    backgroundColor: "#f1f5f9",
-    color: "#64748b",
-    fontWeight: "600",
-  },
-
-  actionSelect: {
-    height: "36px",
-    padding: "0 8px",
-    border: "1px solid #cbd5e1",
-    borderRadius: "6px",
-    backgroundColor: "#ffffff",
-    cursor: "pointer",
-  },
-
-  emptyState: {
-    padding: "50px",
-    textAlign: "center",
-    color: "#64748b",
-  },
-
-  centerMessage: {
-    padding: "40px",
-    color: "#64748b",
-  },
-
-  errorMessage: {
-    padding: "40px",
-    color: "#dc2626",
-  },
-};
+function SummaryCard({ label, value, type }) {
+  return (
+    <article className="rm-summary-card">
+      <span className={`rm-summary-icon rm-icon-${type}`} aria-hidden="true">
+        {type === "total" ? "▤" : type === "active" ? "◷" : type === "fulfilled" ? "✓" : "×"}
+      </span>
+      <div className="rm-summary-content">
+        <p>{label}</p>
+        <strong>{value}</strong>
+      </div>
+    </article>
+  );
+}
 
 export default RequestManagement;

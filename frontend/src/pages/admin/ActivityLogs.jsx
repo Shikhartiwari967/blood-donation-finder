@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import "./ActivityLogs.css";
 
 function ActivityLogs() {
   const { token } = useAuth();
@@ -40,57 +41,129 @@ function ActivityLogs() {
   }, [token]);
 
   if (loading) {
-    return <p>Loading activity logs...</p>;
+    return (
+      <div className="activity-logs-page">
+        <div className="activity-logs-card">
+          <div className="activity-state">
+            <p className="activity-state-title">
+              Loading activity logs...
+            </p>
+            <p className="activity-state-text">
+              Please wait while we fetch the latest activity.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return (
+      <div className="activity-logs-page">
+        <div className="activity-error">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h1>Activity Logs</h1>
+    <div className="activity-logs-page">
 
-      <p>Total Logs: {logs.length}</p>
+      {/* Header */}
+      <div className="activity-logs-header">
+        <h1>Activity Logs</h1>
+        <p>
+          Monitor administrative activities performed on the platform.
+        </p>
+      </div>
 
-      {logs.length === 0 ? (
-        <p>No activity logs found.</p>
-      ) : (
-        <table border="1" cellPadding="8">
-          <thead>
-            <tr>
-              <th>Admin</th>
-              <th>Action</th>
-              <th>Target Type</th>
-              <th>Target ID</th>
-              <th>Details</th>
-              <th>Date</th>
-            </tr>
-          </thead>
+      {/* Logs Card */}
+      <div className="activity-logs-card">
 
-          <tbody>
-            {logs.map((log) => (
-              <tr key={log._id}>
-                <td>
-                  {log.actor?.name || "Unknown"}
-                </td>
+        {/* Summary */}
+        <div className="activity-logs-summary">
+          <p className="activity-logs-summary-title">
+            Recent Administrative Activity
+          </p>
 
-                <td>{log.action}</td>
+          <span className="activity-logs-count">
+            {logs.length}
+          </span>
+        </div>
 
-                <td>{log.targetType}</td>
+        {logs.length === 0 ? (
+          <div className="activity-state">
+            <p className="activity-state-title">
+              No activity logs found
+            </p>
 
-                <td>{log.targetId}</td>
+            <p className="activity-state-text">
+              Administrative actions will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="activity-logs-table-wrapper">
+            <table className="activity-logs-table">
+              <thead>
+                <tr>
+                  <th>Admin</th>
+                  <th>Action</th>
+                  <th>Target Type</th>
+                  <th>Target ID</th>
+                  <th>Details</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
 
-                <td>{log.details || "-"}</td>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log._id}>
+                    <td>
+                      <span className="activity-admin-name">
+                        {log.actor?.name || "Unknown"}
+                      </span>
+                    </td>
 
-                <td>
-                  {new Date(log.createdAt).toLocaleString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+                    <td>
+                      <span className="activity-action">
+                        {log.action}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="activity-target-type">
+                        {log.targetType}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="activity-target-id">
+                        {log.targetId}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="activity-details">
+                        {log.details || "-"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="activity-date">
+                        {new Date(
+                          log.createdAt
+                        ).toLocaleString()}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
