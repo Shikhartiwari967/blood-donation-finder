@@ -1,163 +1,121 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
+import "./RecipientDashboard.css";
+
+const BLOOD_GROUPS = [
+  "A+", "A-", "B+", "B-",
+  "AB+", "AB-", "O+", "O-",
+];
+
+const INITIAL_FORM = {
+  bloodGroup: "",
+  city: "",
+  hospital: "",
+  units: 1,
+  urgency: "normal",
+  message: "",
+};
 
 function RecipientDashboard() {
   const { user, token, logout } = useAuth();
+  const navigate = useNavigate();
 
-  // =========================
-  // REQUEST STATES
-  // =========================
   const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // =========================
-  // CREATE REQUEST STATES
-  // =========================
-  const [formData, setFormData] = useState({
-    bloodGroup: "",
-    city: user?.city || "",
-    hospital: "",
-    units: 1,
-    urgency: "normal",
-    message: "",
-  });
-
-  const [creating, setCreating] = useState(false);
-
-  // =========================
-  // RESPONSE STATES
-  // =========================
-  const [responses, setResponses] = useState({});
-  const [responsesLoading, setResponsesLoading] = useState(null);
-
-  // =========================
-  // NOTIFICATION STATES
-  // =========================
   const [notifications, setNotifications] = useState([]);
-  const [notificationsLoading, setNotificationsLoading] =
-    useState(true);
+  const [responses, setResponses] = useState({});
+  const [formData, setFormData] = useState(INITIAL_FORM);
 
-  const [unreadCount, setUnreadCount] = useState(0);
-
+  const [loading, setLoading] = useState(true);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [responsesLoading, setResponsesLoading] = useState(null);
   const [notificationActionLoading, setNotificationActionLoading] =
     useState(null);
+  const [statusLoading, setStatusLoading] = useState(null);
 
-  // =========================
-  // GENERAL STATES
-  // =========================
+  const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // =========================
-  // FETCH MY REQUESTS
-  // =========================
-  const fetchMyRequests = async () => {
+  const authConfig = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  const fetchMyRequests = useCallback(async () => {
     try {
       setLoading(true);
-      setError("");
 
-      const response = await api.get("/requests/my", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const response = await api.get("/requests/my", authConfig);
       setRequests(response.data.requests || []);
-    } catch (error) {
-      console.error("Failed to fetch my requests:", error);
-
+    } catch (err) {
+      console.error("Failed to fetch blood requests:", err);
       setError(
-        error.response?.data?.message ||
-          "Failed to load your blood requests"
+        err.response?.data?.message ||
+          "Unable to load your blood requests."
       );
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
-  // =========================
-  // FETCH NOTIFICATIONS
-  // =========================
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setNotificationsLoading(true);
 
-      const response = await api.get("/notifications", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const response = await api.get("/notifications", authConfig);
       setNotifications(response.data.notifications || []);
-    } catch (error) {
-      console.error(
-        "Failed to fetch notifications:",
-        error
-      );
-
-      setError(
-        error.response?.data?.message ||
-          "Failed to load notifications"
-      );
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
     } finally {
       setNotificationsLoading(false);
     }
-  };
+  }, [token]);
 
-  // =========================
-  // FETCH UNREAD COUNT
-  // =========================
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = useCallback(async () => {
     try {
       const response = await api.get(
         "/notifications/unread-count",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        authConfig
       );
-
       setUnreadCount(response.data.count || 0);
-    } catch (error) {
-      console.error(
-        "Failed to fetch unread notification count:",
-        error
-      );
+    } catch (err) {
+      console.error("Failed to fetch unread count:", err);
     }
-  };
+  }, [token]);
 
-  // =========================
-  // INITIAL LOAD
-  // =========================
   useEffect(() => {
     if (!token) {
+      setLoading(false);
+      setNotificationsLoading(false);
       return;
     }
 
     fetchMyRequests();
     fetchNotifications();
     fetchUnreadCount();
-  }, [token]);
+  }, [token, fetchMyRequests, fetchNotifications, fetchUnreadCount]);
 
-  // =========================
-  // KEEP CITY IN FORM IN SYNC
-  // =========================
   useEffect(() => {
-    if (user?.city) {
-      setFormData((current) => ({
-        ...current,
-        city: user.city,
-      }));
-    }
+    setFormData((current) => ({
+      ...current,
+      city: user?.city || current.city,
+    }));
   }, [user?.city]);
 
-  // =========================
-  // HANDLE FORM CHANGE
-  // =========================
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const refreshDashboard = async () => {
+    await Promise.all([
+      fetchMyRequests(),
+      fetchNotifications(),
+      fetchUnreadCount(),
+    ]);
+  };
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
     setFormData((current) => ({
       ...current,
@@ -165,108 +123,92 @@ function RecipientDashboard() {
     }));
   };
 
-  // =========================
-  // CREATE BLOOD REQUEST
-  // =========================
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!formData.bloodGroup) {
+      setError("Please select a blood group.");
+      return;
+    }
+
+    if (!formData.city.trim() || !formData.hospital.trim()) {
+      setError("Please enter both city and hospital.");
+      return;
+    }
+
+    if (
+      !Number.isInteger(Number(formData.units)) ||
+      Number(formData.units) < 1
+    ) {
+      setError("Units must be a whole number of at least 1.");
+      return;
+    }
 
     try {
       setCreating(true);
-      setError("");
-      setSuccess("");
 
       const response = await api.post(
         "/requests",
         {
           ...formData,
+          city: formData.city.trim(),
+          hospital: formData.hospital.trim(),
+          message: formData.message.trim(),
           units: Number(formData.units),
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        authConfig
       );
 
       setSuccess(
         response.data?.message ||
-          "Blood request created successfully"
+          "Blood request created successfully."
       );
 
       setFormData({
-        bloodGroup: "",
+        ...INITIAL_FORM,
         city: user?.city || "",
-        hospital: "",
-        units: 1,
-        urgency: "normal",
-        message: "",
       });
 
-      await fetchMyRequests();
-      await fetchNotifications();
-      await fetchUnreadCount();
-    } catch (error) {
-      console.error(
-        "Create blood request failed:",
-        error
-      );
-
+      await refreshDashboard();
+    } catch (err) {
+      console.error("Failed to create blood request:", err);
       setError(
-        error.response?.data?.message ||
-          "Failed to create blood request"
+        err.response?.data?.message ||
+          "Unable to create your blood request."
       );
     } finally {
       setCreating(false);
     }
   };
 
-  // =========================
-  // UPDATE REQUEST STATUS
-  // =========================
-  const handleStatusChange = async (
-    requestId,
-    status
-  ) => {
+  const handleStatusChange = async (requestId, status) => {
+    setError("");
+    setSuccess("");
+
     try {
-      setError("");
-      setSuccess("");
+      setStatusLoading(requestId);
 
       await api.patch(
         `/requests/${requestId}/status`,
-        {
-          status,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { status },
+        authConfig
       );
 
-      setSuccess(
-        "Request status updated successfully"
-      );
-
-      await fetchMyRequests();
-      await fetchNotifications();
-      await fetchUnreadCount();
-    } catch (error) {
-      console.error(
-        "Request status update failed:",
-        error
-      );
-
+      setSuccess("Blood request status updated.");
+      await refreshDashboard();
+    } catch (err) {
+      console.error("Failed to update request status:", err);
       setError(
-        error.response?.data?.message ||
-          "Failed to update request status"
+        err.response?.data?.message ||
+          "Unable to update the request status."
       );
+    } finally {
+      setStatusLoading(null);
     }
   };
 
-  // =========================
-  // GET DONOR RESPONSES
-  // =========================
   const handleViewResponses = async (requestId) => {
     try {
       setResponsesLoading(requestId);
@@ -274,96 +216,59 @@ function RecipientDashboard() {
 
       const response = await api.get(
         `/requests/${requestId}/responses`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        authConfig
       );
 
       setResponses((current) => ({
         ...current,
         [requestId]: response.data.responses || [],
       }));
-    } catch (error) {
-      console.error(
-        "Failed to fetch donor responses:",
-        error
-      );
-
+    } catch (err) {
+      console.error("Failed to fetch donor responses:", err);
       setError(
-        error.response?.data?.message ||
-          "Failed to load donor responses"
+        err.response?.data?.message ||
+          "Unable to load donor responses."
       );
     } finally {
       setResponsesLoading(null);
     }
   };
 
-  // =========================
-  // MARK ONE NOTIFICATION READ
-  // =========================
   const handleMarkAsRead = async (notificationId) => {
     try {
       setNotificationActionLoading(notificationId);
-      setError("");
 
       await api.patch(
         `/notifications/${notificationId}/read`,
         {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        authConfig
       );
 
       setNotifications((current) =>
         current.map((notification) =>
           notification._id === notificationId
-            ? {
-                ...notification,
-                isRead: true,
-              }
+            ? { ...notification, isRead: true }
             : notification
         )
       );
 
-      setUnreadCount((current) =>
-        Math.max(current - 1, 0)
-      );
-    } catch (error) {
-      console.error(
-        "Failed to mark notification as read:",
-        error
-      );
-
+      await fetchUnreadCount();
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
       setError(
-        error.response?.data?.message ||
-          "Failed to mark notification as read"
+        err.response?.data?.message ||
+          "Unable to update the notification."
       );
     } finally {
       setNotificationActionLoading(null);
     }
   };
 
-  // =========================
-  // MARK ALL NOTIFICATIONS READ
-  // =========================
   const handleMarkAllAsRead = async () => {
     try {
       setNotificationActionLoading("all");
-      setError("");
 
-      await api.patch(
-        "/notifications/read-all",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.patch("/notifications/read-all", {}, authConfig);
 
       setNotifications((current) =>
         current.map((notification) => ({
@@ -373,329 +278,202 @@ function RecipientDashboard() {
       );
 
       setUnreadCount(0);
-
-      setSuccess(
-        "All notifications marked as read"
-      );
-    } catch (error) {
-      console.error(
-        "Failed to mark all notifications:",
-        error
-      );
-
+      setSuccess("All notifications marked as read.");
+    } catch (err) {
+      console.error("Failed to update notifications:", err);
       setError(
-        error.response?.data?.message ||
-          "Failed to mark all notifications as read"
+        err.response?.data?.message ||
+          "Unable to update notifications."
       );
     } finally {
       setNotificationActionLoading(null);
     }
   };
 
-  // =========================
-  // LOGOUT
-  // =========================
   const handleLogout = () => {
     logout();
+    navigate("/login");
   };
 
-  // =========================
-  // FORMAT DATE
-  // =========================
-  const formatDate = (date) => {
-    if (!date) {
-      return "";
-    }
+  const formatDate = (value) => {
+    if (!value) return "Date unavailable";
 
-    return new Date(date).toLocaleString();
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime())
+      ? "Date unavailable"
+      : date.toLocaleString();
   };
+
+  const getNotificationTitle = (type) => {
+    const titles = {
+      blood_request: "Blood Request Update",
+      request_response: "Donor Response",
+      request_status: "Request Status Update",
+    };
+
+    return titles[type] || "System Notification";
+  };
+
+  const getNotificationCount = (request) =>
+    Array.isArray(request.donorResponses)
+      ? request.donorResponses.length
+      : 0;
+
+  if (!token) {
+    return (
+      <div className="recipient-dashboard">
+        <div className="recipient-state">
+          <h1>Session required</h1>
+          <p>Please sign in to access your recipient dashboard.</p>
+          <button
+            type="button"
+            className="recipient-button recipient-button-primary"
+            onClick={() => navigate("/login")}
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f4f6f8",
-      }}
-    >
-      {/* =========================
-          HEADER
-      ========================= */}
-      <header
-        style={{
-          background: "#ffffff",
-          borderBottom: "1px solid #ddd",
-          padding: "16px 40px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div>
-          <h2
-            style={{
-              margin: 0,
-              color: "#e31b23",
-            }}
-          >
-            Blood Donation Finder
-          </h2>
+    <div className="recipient-dashboard">
+      <header className="recipient-header">
+        <div className="recipient-brand">
+          <div className="recipient-brand-icon" aria-hidden="true">
+            ♥
+          </div>
 
-          <p
-            style={{
-              margin: "4px 0 0",
-              color: "#666",
-            }}
-          >
-            Recipient Dashboard
-          </p>
+          <div className="recipient-brand-copy">
+            <h2>Blood Donation Finder</h2>
+            <p>Recipient Dashboard</p>
+          </div>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "20px",
-          }}
-        >
-          <span>
-            Welcome, <strong>{user?.name || "Recipient"}</strong>
-          </span>
+        <div className="recipient-header-actions">
+          <div className="recipient-welcome">
+            <span>Welcome back,</span>
+            <strong>{user?.name || "Recipient"}</strong>
+          </div>
 
           <button
+            type="button"
+            className="recipient-button recipient-button-outline"
             onClick={handleLogout}
-            style={{
-              padding: "10px 18px",
-              background: "#ffffff",
-              border: "1px solid #ccc",
-              borderRadius: "6px",
-              cursor: "pointer",
-            }}
           >
             Logout
           </button>
         </div>
       </header>
 
-      {/* =========================
-          MAIN CONTENT
-      ========================= */}
-      <main
-        style={{
-          maxWidth: "1150px",
-          margin: "0 auto",
-          padding: "40px 24px",
-        }}
-      >
-        <h1
-          style={{
-            marginBottom: "8px",
-          }}
-        >
-          Recipient Dashboard
-        </h1>
+      <main className="recipient-main">
+        <section className="recipient-page-intro">
+          <div>
+            <span className="recipient-eyebrow">
+              RECIPIENT PORTAL
+            </span>
 
-        <p
-          style={{
-            color: "#667085",
-            marginBottom: "30px",
-          }}
-        >
-          Create blood requests, track responses and stay
-          updated with donor activity.
-        </p>
+            <h1 className="recipient-page-title">
+              Recipient Dashboard
+            </h1>
 
-        {/* =========================
-            MESSAGES
-        ========================= */}
+            <p>
+              Create blood requests, track donor responses and stay
+              informed about updates to your requests.
+            </p>
+          </div>
+
+          <div className="recipient-intro-icon" aria-hidden="true">
+            ♥
+          </div>
+        </section>
+
         {success && (
-          <div
-            style={{
-              background: "#ecfdf3",
-              color: "#067647",
-              padding: "12px 16px",
-              borderRadius: "8px",
-              marginBottom: "20px",
-              border: "1px solid #abefc6",
-            }}
-          >
-            {success}
+          <div className="recipient-alert recipient-alert-success" role="status">
+            <span aria-hidden="true">✓</span>
+            <p>{success}</p>
+            <button
+              type="button"
+              aria-label="Dismiss success message"
+              onClick={() => setSuccess("")}
+            >
+              ×
+            </button>
           </div>
         )}
 
         {error && (
-          <div
-            style={{
-              background: "#fef3f2",
-              color: "#b42318",
-              padding: "12px 16px",
-              borderRadius: "8px",
-              marginBottom: "20px",
-              border: "1px solid #fecdca",
-            }}
-          >
-            {error}
+          <div className="recipient-alert recipient-alert-error" role="alert">
+            <span aria-hidden="true">!</span>
+            <p>{error}</p>
+            <button
+              type="button"
+              aria-label="Dismiss error message"
+              onClick={() => setError("")}
+            >
+              ×
+            </button>
           </div>
         )}
 
-        {/* =========================
-            PROFILE
-        ========================= */}
-        <section
-          style={{
-            background: "#ffffff",
-            padding: "28px",
-            borderRadius: "12px",
-            marginBottom: "24px",
-            border: "1px solid #e4e7ec",
-          }}
-        >
-          <h2>My Profile</h2>
-
-          <p
-            style={{
-              color: "#667085",
-            }}
-          >
-            Your registered recipient information
-          </p>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: "16px",
-              marginTop: "20px",
-            }}
-          >
+        <section className="recipient-section recipient-profile">
+          <div className="recipient-section-heading">
             <div>
-              <small>Name</small>
-              <p>
-                <strong>{user?.name || "N/A"}</strong>
-              </p>
+              <h2>My Profile</h2>
+              <p>Your registered recipient information.</p>
             </div>
 
-            <div>
-              <small>Email</small>
-              <p>
-                <strong>{user?.email || "N/A"}</strong>
-              </p>
+            <div className="recipient-avatar" aria-hidden="true">
+              {(user?.name || "R").trim().charAt(0).toUpperCase()}
+            </div>
+          </div>
+
+          <div className="recipient-profile-grid">
+            <ProfileItem label="Full Name" value={user?.name} />
+            <ProfileItem label="Email Address" value={user?.email} />
+            <ProfileItem label="Blood Group" value={user?.bloodGroup} />
+            <ProfileItem label="City" value={user?.city} />
+
+            <div className="recipient-profile-item">
+              <span className="recipient-field-label">Account Role</span>
+              <strong>{user?.role || "recipient"}</strong>
             </div>
 
-            <div>
-              <small>Blood Group</small>
-              <p>
-                <strong>
-                  {user?.bloodGroup || "N/A"}
-                </strong>
-              </p>
-            </div>
-
-            <div>
-              <small>City</small>
-              <p>
-                <strong>{user?.city || "N/A"}</strong>
-              </p>
-            </div>
-
-            <div>
-              <small>Role</small>
-              <p>
-                <strong>
-                  {user?.role || "recipient"}
-                </strong>
-              </p>
-            </div>
-
-            <div>
-              <small>Verification</small>
-              <p>
-                <strong>
-                  {user?.isVerified
-                    ? "Verified"
-                    : "Not Verified"}
-                </strong>
-              </p>
+            <div className="recipient-profile-item">
+              <span className="recipient-field-label">Verification</span>
+              <span
+                className={`recipient-badge ${
+                  user?.isVerified
+                    ? "recipient-badge-success"
+                    : "recipient-badge-warning"
+                }`}
+              >
+                {user?.isVerified ? "Verified" : "Not verified"}
+              </span>
             </div>
           </div>
         </section>
 
-        {/* =========================
-            NOTIFICATIONS
-        ========================= */}
-        <section
-          style={{
-            background: "#ffffff",
-            borderRadius: "12px",
-            marginBottom: "24px",
-            border: "1px solid #e4e7ec",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              padding: "24px 28px",
-              borderBottom: "1px solid #e4e7ec",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
+        <section className="recipient-section recipient-notifications">
+          <div className="recipient-section-heading recipient-notifications-heading">
             <div>
-              <h2
-                style={{
-                  margin: 0,
-                }}
-              >
-                Notifications
-              </h2>
-
-              <p
-                style={{
-                  color: "#667085",
-                  marginBottom: 0,
-                }}
-              >
-                Updates about your blood requests and
-                donor responses
-              </p>
+              <h2>Notifications</h2>
+              <p>Updates about blood requests and donor activity.</p>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-              }}
-            >
-              {unreadCount > 0 && (
-                <span
-                  style={{
-                    background: "#fee4e2",
-                    color: "#d92d20",
-                    padding: "7px 12px",
-                    borderRadius: "20px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
-                >
-                  {unreadCount} unread
-                </span>
-              )}
+            <div className="recipient-notification-actions">
+              <span className="recipient-badge recipient-badge-neutral">
+                {unreadCount} unread
+              </span>
 
               {unreadCount > 0 && (
                 <button
+                  type="button"
+                  className="recipient-button recipient-button-outline"
                   onClick={handleMarkAllAsRead}
-                  disabled={
-                    notificationActionLoading === "all"
-                  }
-                  style={{
-                    padding: "9px 14px",
-                    background: "#ffffff",
-                    border: "1px solid #cfd4dc",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                  }}
+                  disabled={notificationActionLoading === "all"}
                 >
                   {notificationActionLoading === "all"
                     ? "Updating..."
@@ -706,579 +484,393 @@ function RecipientDashboard() {
           </div>
 
           {notificationsLoading ? (
-            <div
-              style={{
-                padding: "28px",
-              }}
-            >
-              Loading notifications...
-            </div>
+            <LoadingState text="Loading notifications..." />
           ) : notifications.length === 0 ? (
-            <div
-              style={{
-                padding: "28px",
-                color: "#667085",
-              }}
-            >
-              No notifications yet.
-            </div>
+            <EmptyState
+              title="No notifications yet"
+              text="Updates about your requests will appear here."
+            />
           ) : (
-            notifications.map((notification) => (
-              <div
-                key={notification._id}
-                style={{
-                  padding: "20px 28px",
-                  borderBottom: "1px solid #e4e7ec",
-                  background: notification.isRead
-                    ? "#ffffff"
-                    : "#fff7f7",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: "20px",
-                  }}
+            <div className="recipient-notification-list">
+              {notifications.map((notification) => (
+                <article
+                  key={notification._id}
+                  className={`recipient-notification ${
+                    notification.isRead ? "" : "is-unread"
+                  }`}
                 >
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      <strong>
-                        {notification.type ===
-                        "blood_request"
-                          ? "New Blood Request"
-                          : notification.type ===
-                            "request_response"
-                          ? "Request Response"
-                          : notification.type ===
-                            "request_status"
-                          ? "Request Status Update"
-                          : "System Notification"}
-                      </strong>
+                  <div className="recipient-notification-icon" aria-hidden="true">
+                    {notification.isRead ? "✓" : "!"}
+                  </div>
+
+                  <div className="recipient-notification-content">
+                    <div className="recipient-notification-title-row">
+                      <h3>{getNotificationTitle(notification.type)}</h3>
 
                       {!notification.isRead && (
-                        <span
-                          style={{
-                            background: "#e31b23",
-                            color: "#ffffff",
-                            padding: "3px 8px",
-                            borderRadius: "10px",
-                            fontSize: "11px",
-                            fontWeight: "600",
-                          }}
-                        >
+                        <span className="recipient-badge recipient-badge-danger">
                           New
                         </span>
                       )}
                     </div>
 
-                    <p
-                      style={{
-                        margin: "0 0 8px",
-                        color: "#475467",
-                      }}
-                    >
-                      {notification.message}
-                    </p>
+                    <p>{notification.message}</p>
 
                     {notification.bloodRequest && (
-                      <p
-                        style={{
-                          margin: "0 0 8px",
-                          fontSize: "14px",
-                          color: "#667085",
-                        }}
-                      >
-                        {notification.bloodRequest.bloodGroup}{" "}
-                        •{" "}
-                        {notification.bloodRequest.city}{" "}
-                        •{" "}
+                      <p className="recipient-notification-meta">
+                        {notification.bloodRequest.bloodGroup}
+                        {" · "}
+                        {notification.bloodRequest.city}
+                        {" · "}
                         {notification.bloodRequest.hospital}
                       </p>
                     )}
 
-                    <small
-                      style={{
-                        color: "#98a2b3",
-                      }}
-                    >
-                      {formatDate(
-                        notification.createdAt
-                      )}
-                    </small>
+                    <small>{formatDate(notification.createdAt)}</small>
                   </div>
 
                   {!notification.isRead && (
                     <button
-                      onClick={() =>
-                        handleMarkAsRead(
-                          notification._id
-                        )
-                      }
+                      type="button"
+                      className="recipient-button recipient-button-small recipient-button-outline"
+                      onClick={() => handleMarkAsRead(notification._id)}
                       disabled={
-                        notificationActionLoading ===
-                        notification._id
+                        notificationActionLoading === notification._id
                       }
-                      style={{
-                        alignSelf: "center",
-                        border: "none",
-                        background: "transparent",
-                        color: "#d92d20",
-                        cursor: "pointer",
-                        whiteSpace: "nowrap",
-                      }}
                     >
-                      {notificationActionLoading ===
-                      notification._id
+                      {notificationActionLoading === notification._id
                         ? "Updating..."
                         : "Mark as read"}
                     </button>
                   )}
-                </div>
-              </div>
-            ))
+                </article>
+              ))}
+            </div>
           )}
         </section>
 
-        {/* =========================
-            CREATE REQUEST
-        ========================= */}
-        <section
-          style={{
-            background: "#ffffff",
-            padding: "28px",
-            borderRadius: "12px",
-            marginBottom: "24px",
-            border: "1px solid #e4e7ec",
-          }}
-        >
-          <h2>Create Blood Request</h2>
+        <section className="recipient-section">
+          <div className="recipient-section-heading">
+            <div>
+              <h2>Create Blood Request</h2>
+              <p>
+                Enter the required details so matching donors can be notified.
+              </p>
+            </div>
+          </div>
 
-          <p
-            style={{
-              color: "#667085",
-            }}
-          >
-            Submit a request and matching donors will be
-            notified.
-          </p>
-
-          <form onSubmit={handleSubmit}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "18px",
-                marginTop: "20px",
-              }}
-            >
-              <div>
-                <label>Blood Group</label>
-
+          <form className="recipient-request-form" onSubmit={handleSubmit}>
+            <div className="recipient-form-grid">
+              <div className="recipient-form-field">
+                <label htmlFor="request-blood-group">Blood Group *</label>
                 <select
+                  id="request-blood-group"
                   name="bloodGroup"
                   value={formData.bloodGroup}
                   onChange={handleChange}
                   required
-                  style={inputStyle}
                 >
-                  <option value="">
-                    Select blood group
-                  </option>
-                  <option value="A+">A+</option>
-                  <option value="A-">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B-">B-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB-">AB-</option>
-                  <option value="O+">O+</option>
-                  <option value="O-">O-</option>
+                  <option value="">Select blood group</option>
+                  {BLOOD_GROUPS.map((group) => (
+                    <option key={group} value={group}>
+                      {group}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              <div>
-                <label>City</label>
-
+              <div className="recipient-form-field">
+                <label htmlFor="request-city">City *</label>
                 <input
-                  type="text"
+                  id="request-city"
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
+                  placeholder="Enter city"
+                  minLength={2}
+                  maxLength={100}
                   required
-                  style={inputStyle}
                 />
               </div>
 
-              <div>
-                <label>Hospital</label>
-
+              <div className="recipient-form-field">
+                <label htmlFor="request-hospital">Hospital *</label>
                 <input
-                  type="text"
+                  id="request-hospital"
                   name="hospital"
                   value={formData.hospital}
                   onChange={handleChange}
+                  placeholder="Enter hospital name"
+                  minLength={2}
+                  maxLength={150}
                   required
-                  style={inputStyle}
                 />
               </div>
 
-              <div>
-                <label>Units</label>
-
+              <div className="recipient-form-field">
+                <label htmlFor="request-units">Units Required *</label>
                 <input
+                  id="request-units"
                   type="number"
                   name="units"
-                  min="1"
                   value={formData.units}
                   onChange={handleChange}
+                  min="1"
+                  step="1"
                   required
-                  style={inputStyle}
                 />
               </div>
 
-              <div>
-                <label>Urgency</label>
-
+              <div className="recipient-form-field">
+                <label htmlFor="request-urgency">Urgency</label>
                 <select
+                  id="request-urgency"
                   name="urgency"
                   value={formData.urgency}
                   onChange={handleChange}
-                  style={inputStyle}
                 >
-                  <option value="normal">
-                    Normal
-                  </option>
-                  <option value="urgent">
-                    Urgent
-                  </option>
+                  <option value="normal">Normal</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="critical">Critical</option>
                 </select>
               </div>
 
-              <div
-                style={{
-                  gridColumn: "1 / -1",
-                }}
-              >
-                <label>Message</label>
-
+              <div className="recipient-form-field recipient-form-field-wide">
+                <label htmlFor="request-message">Additional Message</label>
                 <textarea
+                  id="request-message"
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
-                  placeholder="Additional information"
-                  rows="4"
-                  style={inputStyle}
+                  placeholder="Add any important information (optional)"
+                  rows={4}
+                  maxLength={500}
                 />
+                <small>{formData.message.length}/500 characters</small>
               </div>
             </div>
 
             <button
               type="submit"
+              className="recipient-button recipient-button-primary recipient-submit-button"
               disabled={creating}
-              style={{
-                marginTop: "20px",
-                padding: "12px 22px",
-                background: "#e31b23",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: "6px",
-                cursor: creating
-                  ? "not-allowed"
-                  : "pointer",
-                fontWeight: "600",
-              }}
             >
-              {creating
-                ? "Creating..."
-                : "Create Blood Request"}
+              {creating ? "Creating request..." : "Create Blood Request"}
             </button>
           </form>
         </section>
 
-        {/* =========================
-            MY REQUESTS
-        ========================= */}
-        <section
-          style={{
-            background: "#ffffff",
-            padding: "28px",
-            borderRadius: "12px",
-            border: "1px solid #e4e7ec",
-          }}
-        >
-          <h2>My Blood Requests</h2>
+        <section className="recipient-section">
+          <div className="recipient-section-heading">
+            <div>
+              <h2>My Blood Requests</h2>
+              <p>Manage request status and review donor responses.</p>
+            </div>
 
-          <p
-            style={{
-              color: "#667085",
-            }}
-          >
-            Track your requests and donor responses.
-          </p>
+            <span className="recipient-badge recipient-badge-neutral">
+              {requests.length} total
+            </span>
+          </div>
 
           {loading ? (
-            <p>Loading requests...</p>
+            <LoadingState text="Loading your blood requests..." />
           ) : requests.length === 0 ? (
-            <p
-              style={{
-                color: "#667085",
-              }}
-            >
-              You have not created any blood requests.
-            </p>
+            <EmptyState
+              title="No blood requests yet"
+              text="Your requests will appear here after you create one."
+            />
           ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "20px",
-                marginTop: "20px",
-              }}
-            >
+            <div className="recipient-request-list">
               {requests.map((request) => (
-                <div
+                <article
                   key={request._id}
-                  style={{
-                    border: "1px solid #e4e7ec",
-                    borderRadius: "10px",
-                    padding: "22px",
-                  }}
+                  className="recipient-request-card"
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: "15px",
-                      marginBottom: "18px",
-                    }}
-                  >
-                    <h3
-                      style={{
-                        margin: 0,
-                      }}
-                    >
-                      {request.bloodGroup} Blood Request
-                    </h3>
+                  <div className="recipient-request-card-header">
+                    <div className="recipient-request-title">
+                      <span className="recipient-blood-icon" aria-hidden="true">
+                        ♥
+                      </span>
+
+                      <div>
+                        <h3>{request.bloodGroup} Blood Request</h3>
+                        <p>Created {formatDate(request.createdAt)}</p>
+                      </div>
+                    </div>
 
                     <span
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: "15px",
-                        background:
-                          request.status === "active"
-                            ? "#dcfae6"
-                            : request.status ===
-                              "fulfilled"
-                            ? "#d1e9ff"
-                            : "#f2f4f7",
-                      }}
+                      className={`recipient-badge recipient-badge-${request.status}`}
                     >
                       {request.status}
                     </span>
                   </div>
 
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fit, minmax(180px, 1fr))",
-                      gap: "15px",
-                    }}
-                  >
-                    <p>
-                      <strong>City:</strong>{" "}
-                      {request.city}
-                    </p>
+                  <div className="recipient-request-details">
+                    <ProfileItem label="City" value={request.city} />
+                    <ProfileItem label="Hospital" value={request.hospital} />
+                    <ProfileItem label="Units" value={request.units} />
 
-                    <p>
-                      <strong>Hospital:</strong>{" "}
-                      {request.hospital}
-                    </p>
+                    <div className="recipient-profile-item">
+                      <span className="recipient-field-label">Urgency</span>
+                      <span
+                        className={`recipient-badge recipient-badge-${request.urgency}`}
+                      >
+                        {request.urgency}
+                      </span>
+                    </div>
 
-                    <p>
-                      <strong>Units:</strong>{" "}
-                      {request.units}
-                    </p>
-
-                    <p>
-                      <strong>Urgency:</strong>{" "}
-                      {request.urgency}
-                    </p>
+                    <ProfileItem
+                      label="Donor Responses"
+                      value={getNotificationCount(request)}
+                    />
                   </div>
 
                   {request.message && (
-                    <p>
-                      <strong>Message:</strong>{" "}
-                      {request.message}
-                    </p>
+                    <div className="recipient-request-message">
+                      <strong>Additional message</strong>
+                      <p>{request.message}</p>
+                    </div>
                   )}
 
-                  {/* STATUS */}
-                  <div
-                    style={{
-                      marginTop: "15px",
-                    }}
-                  >
-                    <label>
-                      <strong>
-                        Update Status:
-                      </strong>
-                    </label>{" "}
+                  <div className="recipient-request-actions">
+                    <div className="recipient-status-control">
+                      <label htmlFor={`status-${request._id}`}>
+                        Request status
+                      </label>
 
-                    <select
-                      value={request.status}
-                      onChange={(e) =>
-                        handleStatusChange(
-                          request._id,
-                          e.target.value
-                        )
-                      }
-                      style={{
-                        padding: "8px",
-                        borderRadius: "5px",
-                        border: "1px solid #ccc",
-                      }}
+                      <select
+                        id={`status-${request._id}`}
+                        value={request.status}
+                        disabled={statusLoading === request._id}
+                        onChange={(event) =>
+                          handleStatusChange(request._id, event.target.value)
+                        }
+                      >
+                        <option value="active">Active</option>
+                        <option value="fulfilled">Fulfilled</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="recipient-button recipient-button-outline"
+                      onClick={() => handleViewResponses(request._id)}
+                      disabled={responsesLoading === request._id}
                     >
-                      <option value="active">
-                        Active
-                      </option>
-
-                      <option value="fulfilled">
-                        Fulfilled
-                      </option>
-
-                      <option value="cancelled">
-                        Cancelled
-                      </option>
-                    </select>
+                      {responsesLoading === request._id
+                        ? "Loading responses..."
+                        : "View Donor Responses"}
+                    </button>
                   </div>
 
-                  {/* RESPONSES BUTTON */}
-                  <button
-                    onClick={() =>
-                      handleViewResponses(
-                        request._id
-                      )
-                    }
-                    disabled={
-                      responsesLoading === request._id
-                    }
-                    style={{
-                      marginTop: "15px",
-                      padding: "9px 15px",
-                      background: "#ffffff",
-                      border: "1px solid #cfd4dc",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {responsesLoading === request._id
-                      ? "Loading..."
-                      : "View Donor Responses"}
-                  </button>
+                  {Object.prototype.hasOwnProperty.call(
+                    responses,
+                    request._id
+                  ) && (
+                    <div className="recipient-responses">
+                      <h4>Donor Responses</h4>
 
-                  {/* DONOR RESPONSES */}
-                  {responses[request._id] && (
-                    <div
-                      style={{
-                        marginTop: "20px",
-                        padding: "18px",
-                        background: "#f9fafb",
-                        borderRadius: "8px",
-                      }}
-                    >
-                      <h4>
-                        Donor Responses
-                      </h4>
-
-                      {responses[request._id].length ===
-                      0 ? (
-                        <p>
-                          No donors have responded yet.
+                      {responses[request._id].length === 0 ? (
+                        <p className="recipient-muted">
+                          No donors have responded to this request yet.
                         </p>
                       ) : (
-                        responses[request._id].map(
-                          (response) => (
+                        <div className="recipient-response-list">
+                          {responses[request._id].map((response, index) => (
                             <div
-                              key={response._id}
-                              style={{
-                                background:
-                                  "#ffffff",
-                                padding: "15px",
-                                marginBottom: "10px",
-                                borderRadius: "7px",
-                                border:
-                                  "1px solid #e4e7ec",
-                              }}
+                              className="recipient-response-card"
+                              key={
+                                response._id ||
+                                `${request._id}-${index}`
+                              }
                             >
-                              <p>
+                              <div>
+                                <span className="recipient-field-label">
+                                  Donor
+                                </span>
                                 <strong>
-                                  Donor:
-                                </strong>{" "}
-                                {response.donor?.name ||
-                                  "N/A"}
-                              </p>
+                                  {response.donor?.name || "Donor"}
+                                </strong>
+                              </div>
 
-                              <p>
+                              <div>
+                                <span className="recipient-field-label">
+                                  Blood Group
+                                </span>
                                 <strong>
-                                  Email:
-                                </strong>{" "}
-                                {response.donor?.email ||
-                                  "N/A"}
-                              </p>
+                                  {response.donor?.bloodGroup || "N/A"}
+                                </strong>
+                              </div>
 
-                              <p>
-                                <strong>
-                                  Blood Group:
-                                </strong>{" "}
-                                {response.donor
-                                  ?.bloodGroup ||
-                                  "N/A"}
-                              </p>
+                              <div>
+                                <span className="recipient-field-label">
+                                  Response
+                                </span>
+                                <span
+                                  className={`recipient-badge recipient-badge-${response.status}`}
+                                >
+                                  {response.status}
+                                </span>
+                              </div>
 
-                              <p>
+                              <div>
+                                <span className="recipient-field-label">
+                                  Responded
+                                </span>
                                 <strong>
-                                  Response:
-                                </strong>{" "}
-                                {response.status}
-                              </p>
+                                  {formatDate(response.respondedAt)}
+                                </strong>
+                              </div>
                             </div>
-                          )
-                        )
+                          ))}
+                        </div>
                       )}
                     </div>
                   )}
-                </div>
+                </article>
               ))}
             </div>
           )}
         </section>
+
+        <footer className="recipient-footer">
+          <span>Blood Donation Finder</span>
+          <span>Connecting recipients with potential donors</span>
+        </footer>
       </main>
     </div>
   );
 }
 
-// =========================
-// COMMON INPUT STYLE
-// =========================
-const inputStyle = {
-  display: "block",
-  width: "100%",
-  boxSizing: "border-box",
-  padding: "11px 12px",
-  marginTop: "7px",
-  border: "1px solid #cfd4dc",
-  borderRadius: "6px",
-  fontSize: "14px",
-};
+function ProfileItem({ label, value }) {
+  return (
+    <div className="recipient-profile-item">
+      <span className="recipient-field-label">{label}</span>
+      <strong>{value ?? "N/A"}</strong>
+    </div>
+  );
+}
+
+function LoadingState({ text }) {
+  return (
+    <div className="recipient-state">
+      <span className="recipient-spinner" aria-hidden="true" />
+      <p>{text}</p>
+    </div>
+  );
+}
+
+function EmptyState({ title, text }) {
+  return (
+    <div className="recipient-state">
+      <div className="recipient-empty-icon" aria-hidden="true">
+        ♥
+      </div>
+      <h3>{title}</h3>
+      <p>{text}</p>
+    </div>
+  );
+}
 
 export default RecipientDashboard;
