@@ -1,0 +1,595 @@
+/* =================================
+   Register Page
+================================= */
+
+.register-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #172033;
+}
+
+
+/* =================================
+   Main
+================================= */
+
+.register-main {
+  width: 100%;
+  min-height: calc(100vh - 72px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 45px 20px 35px;
+
+  box-sizing: border-box;
+}
+
+
+/* =================================
+   Card
+================================= */
+
+.register-card {
+  width: 100%;
+  max-width: 560px;
+  min-width: 0;
+
+  background: #ffffff;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+
+  padding: 38px 40px;
+
+  box-sizing: border-box;
+
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+
+/* =================================
+   Icon
+================================= */
+
+.register-icon {
+  width: 58px;
+  height: 58px;
+
+  margin: 0 auto 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #fee2e2;
+}
+
+.register-icon span {
+  color: #dc2626;
+  font-size: 27px;
+  line-height: 1;
+}
+
+
+/* =================================
+   Header
+================================= */
+
+.register-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.register-header h1 {
+  margin: 0 0 10px;
+
+  color: #111827;
+
+  font-size: 30px;
+  line-height: 1.2;
+  font-weight: 800;
+
+  letter-spacing: -0.8px;
+}
+
+.register-header p {
+  max-width: 430px;
+
+  margin: 0 auto;
+
+  color: #64748b;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+
+/* =================================
+   Messages
+================================= */
+
+.register-message {
+  width: 100%;
+
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+
+  padding: 12px 14px;
+
+  margin-bottom: 20px;
+
+  border-radius: 9px;
+
+  box-sizing: border-box;
+
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.message-icon {
+  flex: none;
+  font-weight: 700;
+}
+
+.register-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.register-success {
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+
+/* =================================
+   Form
+================================= */
+
+.register-form {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* =================================
+   Fields
+================================= */
+
+.register-field {
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 18px;
+}
+
+.register-field label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #334155;
+
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+
+/* =================================
+   Inputs + Select
+================================= */
+
+.register-field input,
+.register-field select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  height: 48px;
+
+  padding: 0 14px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+
+  outline: none;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  color: #172033;
+
+  font-family: inherit;
+  font-size: 14px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.register-field input::placeholder {
+  color: #94a3b8;
+}
+
+.register-field input:focus,
+.register-field select:focus {
+  border-color: #dc2626;
+
+  box-shadow:
+    0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+
+/* =================================
+   Password
+================================= */
+
+.register-password {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.register-password:focus-within {
+  border-color: #dc2626;
+
+  box-shadow:
+    0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.register-password input {
+  flex: 1;
+
+  width: auto;
+  min-width: 0;
+  height: 100%;
+
+  padding: 0 14px;
+
+  border: none !important;
+
+  outline: none !important;
+
+  box-shadow: none !important;
+
+  border-radius: 0;
+
+  background: transparent;
+}
+
+.password-toggle {
+  flex: none;
+
+  height: 100%;
+
+  padding: 0 14px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #dc2626;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: #b91c1c;
+}
+
+.register-field small {
+  display: block;
+
+  margin-top: 6px;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+}
+
+
+/* =================================
+   Two Columns
+================================= */
+
+.register-two-columns {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 16px;
+}
+
+
+/* =================================
+   Submit
+================================= */
+
+.register-submit {
+  width: 100%;
+  height: 50px;
+
+  margin-top: 3px;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #dc2626;
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
+}
+
+.register-submit:hover:not(:disabled) {
+  background: #b91c1c;
+
+  box-shadow:
+    0 8px 18px rgba(220, 38, 38, 0.2);
+}
+
+.register-submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.register-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+
+/* =================================
+   Login Link
+================================= */
+
+.register-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  gap: 5px;
+
+  margin-top: 24px;
+
+  color: #64748b;
+
+  font-size: 13px;
+}
+
+.register-login button {
+  padding: 0;
+
+  border: none;
+
+  background: transparent;
+
+  color: #dc2626;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.register-login button:hover {
+  text-decoration: underline;
+}
+
+
+/* =================================
+   Footer
+================================= */
+
+.register-footer {
+  margin: 20px 0 0;
+
+  color: #94a3b8;
+
+  text-align: center;
+
+  font-size: 12px;
+}
+
+
+/* =================================
+   Tablet
+================================= */
+
+@media (max-width: 768px) {
+  .register-main {
+    min-height: auto;
+
+    padding: 35px 20px 40px;
+  }
+
+  .register-card {
+    max-width: 560px;
+    padding: 34px 30px;
+  }
+}
+
+
+/* =================================
+   Small Mobile
+================================= */
+
+@media (max-width: 480px) {
+  .register-main {
+    padding: 28px 16px 35px;
+  }
+
+  .register-card {
+    width: 100%;
+    max-width: 100%;
+
+    padding: 28px 20px;
+
+    border-radius: 16px;
+  }
+
+  .register-icon {
+    width: 52px;
+    height: 52px;
+
+    margin-bottom: 17px;
+  }
+
+  .register-icon span {
+    font-size: 24px;
+  }
+
+  .register-header {
+    margin-bottom: 24px;
+  }
+
+  .register-header h1 {
+    font-size: 26px;
+    line-height: 1.15;
+    letter-spacing: -0.5px;
+  }
+
+  .register-header p {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .register-message {
+    font-size: 12px;
+    padding: 11px 12px;
+  }
+
+  .register-field {
+    margin-bottom: 16px;
+  }
+
+  .register-field label {
+    font-size: 12px;
+    margin-bottom: 7px;
+  }
+
+  .register-field input,
+  .register-field select {
+    height: 46px;
+    font-size: 13px;
+  }
+
+  .register-password {
+    height: 46px;
+  }
+
+  .register-password input {
+    font-size: 13px;
+  }
+
+  .password-toggle {
+    padding: 0 12px;
+    font-size: 11px;
+  }
+
+  .register-two-columns {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .register-submit {
+    height: 48px;
+    font-size: 14px;
+  }
+
+  .register-login {
+    font-size: 12px;
+  }
+
+  .register-login button {
+    font-size: 12px;
+  }
+
+  .register-footer {
+    font-size: 11px;
+  }
+}
+
+
+/* =================================
+   Very Small Screens
+================================= */
+
+@media (max-width: 360px) {
+  .register-main {
+    padding: 22px 12px 30px;
+  }
+
+  .register-card {
+    padding: 24px 16px;
+  }
+
+  .register-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .register-icon span {
+    font-size: 22px;
+  }
+
+  .register-header h1 {
+    font-size: 24px;
+  }
+
+  .register-header p {
+    font-size: 11px;
+  }
+
+  .register-field input,
+  .register-field select,
+  .register-password {
+    height: 44px;
+  }
+
+  .register-submit {
+    height: 46px;
+  }
+}

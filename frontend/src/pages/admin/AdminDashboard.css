@@ -1,0 +1,247 @@
+
+/* =========================================
+   ADMIN DASHBOARD
+========================================= */
+
+.admin-dashboard {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 32px;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* Header */
+
+.admin-dashboard-header {
+  min-width: 0;
+  margin-bottom: 32px;
+}
+
+.admin-dashboard-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 30px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Sections */
+
+.admin-dashboard-section {
+  min-width: 0;
+  margin-bottom: 30px;
+}
+
+.admin-dashboard-section-title {
+  margin: 0 0 14px;
+  color: #1e293b;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+/* Statistics grids */
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  min-width: 0;
+}
+
+.admin-stats-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-stats-grid.one {
+  grid-template-columns: minmax(0, 360px);
+}
+
+/* Statistic cards */
+
+.admin-stat-card {
+  position: relative;
+  min-width: 0;
+  min-height: 118px;
+  padding: 21px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.admin-stat-card::before {
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: #dc2626;
+  content: "";
+}
+
+.admin-stat-title {
+  margin: 0;
+  padding-left: 8px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.admin-stat-value {
+  margin: 9px 0 0;
+  padding-left: 8px;
+  color: #0f172a;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 750;
+}
+
+/* Loading */
+
+.admin-dashboard-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Error */
+
+.admin-dashboard-error {
+  padding: 15px 17px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+/* Tablet */
+
+@media (max-width: 1100px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-stats-grid.one {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 700px) {
+  .admin-dashboard {
+    padding: 22px 16px;
+  }
+
+  .admin-dashboard-header {
+    margin-bottom: 25px;
+  }
+
+  .admin-dashboard-header h1 {
+    font-size: 26px;
+  }
+
+  .admin-dashboard-header p {
+    font-size: 13px;
+  }
+
+  .admin-dashboard-section {
+    margin-bottom: 25px;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .admin-stats-grid.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-stats-grid.one {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-stat-card {
+    min-height: 105px;
+    padding: 17px 14px;
+  }
+
+  .admin-stat-title {
+    font-size: 12px;
+  }
+
+  .admin-stat-value {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-dashboard {
+    padding: 18px 10px;
+  }
+
+  .admin-dashboard-header h1 {
+    font-size: 23px;
+  }
+
+  .admin-stats-grid,
+  .admin-stats-grid.two {
+    gap: 9px;
+  }
+
+  .admin-stat-card {
+    padding: 15px 11px;
+  }
+
+  .admin-stat-title {
+    font-size: 11px;
+  }
+
+  .admin-stat-value {
+    font-size: 24px;
+  }
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-stat-card {
+    transition: none;
+  }
+
+  .admin-stat-card:hover {
+    transform: none;
+  }
+}
