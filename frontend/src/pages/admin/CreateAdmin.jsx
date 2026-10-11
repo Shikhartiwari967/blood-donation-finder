@@ -1,425 +1,307 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
+import "./CreateAdmin.css";
 
-const CreateAdmin = () => {
+const initialForm = {
+  name: "",
+  email: "",
+  phone: "",
+  password: "",
+};
+
+function CreateAdmin() {
   const navigate = useNavigate();
+  const { token } = useAuth();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-  });
-
+  const [formData, setFormData] = useState(initialForm);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+
+    setError("");
+    setMessage("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setError("");
     setMessage("");
 
-    if (!formData.name || !formData.email || !formData.password) {
-      setError("Name, email and password are required.");
+    const name = formData.name.trim();
+    const email = formData.email.trim().toLowerCase();
+    const phone = formData.phone.trim();
+    const password = formData.password;
+
+    if (!name || !email || !phone || !password) {
+      setError("Please complete all required fields.");
       return;
     }
 
-    if (formData.password.length < 6) {
+    if (name.length < 2) {
+      setError("Name must contain at least 2 characters.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(phone)) {
+      setError("Enter a valid 10-digit phone number.");
+      return;
+    }
+
+    if (password.length < 6) {
       setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (!token) {
+      setError("Your session has expired. Please log in again.");
       return;
     }
 
     try {
       setLoading(true);
 
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(
-        "http://localhost:5000/api/auth/create-admin",
+      const response = await api.post(
+        "/auth/create-admin",
         {
-          method: "POST",
+          name,
+          email,
+          phone,
+          password,
+        },
+        {
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(formData),
         }
       );
 
-      const data = await response.json();
+      setMessage(
+        response.data?.message ||
+          "Admin account created successfully."
+      );
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create admin");
-      }
+      setFormData(initialForm);
+      setShowPassword(false);
+    } catch (err) {
+      console.error("Admin creation failed:", err);
 
-      setMessage("Admin account created successfully.");
-
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-      });
-    } catch (error) {
-      setError(error.message);
+      setError(
+        err.response?.data?.message ||
+          "Unable to create the admin account. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.page}>
-      {/* Header */}
-      <div style={styles.header}>
-        <div style={styles.logo}>
-          <span style={styles.logoIcon}>♥</span>
-          <span>Blood Donation Finder</span>
-        </div>
+    <div className="create-admin-page">
+      <header className="create-admin-header">
+        <button
+          type="button"
+          className="create-admin-brand"
+          onClick={() => navigate("/admin")}
+          aria-label="Return to admin dashboard"
+        >
+          <span className="create-admin-brand-icon">♥</span>
+
+          <span className="create-admin-brand-text">
+            <strong>Blood Donation Finder</strong>
+            <small>Administration</small>
+          </span>
+        </button>
 
         <button
-          style={styles.backButton}
+          type="button"
+          className="create-admin-back"
           onClick={() => navigate("/admin")}
         >
-          ← Back to Dashboard
+          <span aria-hidden="true">←</span>
+          <span>Back to Dashboard</span>
         </button>
-      </div>
+      </header>
 
-      {/* Main */}
-      <main style={styles.main}>
-        <div style={styles.card}>
-          <div style={styles.iconContainer}>🛡️</div>
+      <main className="create-admin-main">
+        <section className="create-admin-card">
+          <div className="create-admin-eyebrow">
+            ADMINISTRATION
+          </div>
 
-          <h1 style={styles.title}>Create Admin Account</h1>
+          <div className="create-admin-icon" aria-hidden="true">
+            🛡️
+          </div>
 
-          <p style={styles.subtitle}>
-            Create a new administrator account for the Blood Donation Finder
-            platform.
+          <h1>Create Admin Account</h1>
+
+          <p className="create-admin-subtitle">
+            Add a new administrator to help manage the
+            Blood Donation Finder platform.
           </p>
 
           {message && (
-            <div style={styles.successMessage}>
-              ✓ {message}
+            <div
+              className="create-admin-alert create-admin-success"
+              role="status"
+            >
+              <span aria-hidden="true">✓</span>
+              <span>{message}</span>
             </div>
           )}
 
           {error && (
-            <div style={styles.errorMessage}>
-              {error}
+            <div
+              className="create-admin-alert create-admin-error"
+              role="alert"
+            >
+              <span aria-hidden="true">!</span>
+              <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            {/* Name */}
-            <div style={styles.field}>
-              <label style={styles.label}>Full Name</label>
+          <form onSubmit={handleSubmit} noValidate>
+            <div className="create-admin-field">
+              <label htmlFor="admin-name">Full Name</label>
 
               <input
-                type="text"
+                id="admin-name"
                 name="name"
+                type="text"
+                autoComplete="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Enter admin name"
-                style={styles.input}
+                placeholder="Enter full name"
+                maxLength={50}
+                required
+                disabled={loading}
               />
             </div>
 
-            {/* Email */}
-            <div style={styles.field}>
-              <label style={styles.label}>Email Address</label>
+            <div className="create-admin-field">
+              <label htmlFor="admin-email">Email Address</label>
 
               <input
-                type="email"
+                id="admin-email"
                 name="email"
+                type="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="admin@example.com"
-                style={styles.input}
+                required
+                disabled={loading}
               />
             </div>
 
-            {/* Phone */}
-            <div style={styles.field}>
-              <label style={styles.label}>
-                Phone Number <span style={styles.optional}>(Optional)</span>
-              </label>
+            <div className="create-admin-field">
+              <label htmlFor="admin-phone">Phone Number</label>
 
               <input
-                type="tel"
+                id="admin-phone"
                 name="phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
                 value={formData.phone}
                 onChange={handleChange}
-                placeholder="Enter phone number"
-                style={styles.input}
+                placeholder="10-digit phone number"
+                maxLength={10}
+                pattern="[0-9]{10}"
+                required
+                disabled={loading}
               />
+
+              <span className="create-admin-hint">
+                Enter a 10-digit mobile number.
+              </span>
             </div>
 
-            {/* Password */}
-            <div style={styles.field}>
-              <label style={styles.label}>Password</label>
+            <div className="create-admin-field">
+              <label htmlFor="admin-password">Password</label>
 
-              <div style={styles.passwordWrapper}>
+              <div className="create-admin-password">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  id="admin-password"
                   name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Create a strong password"
-                  style={styles.passwordInput}
+                  placeholder="Create a password"
+                  minLength={6}
+                  required
+                  disabled={loading}
                 />
 
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={styles.showButton}
+                  className="create-admin-password-toggle"
+                  onClick={() => setShowPassword((previous) => !previous)}
+                  disabled={loading}
+                  aria-label={
+                    showPassword ? "Hide password" : "Show password"
+                  }
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
+
+              <span className="create-admin-hint">
+                Use at least 6 characters.
+              </span>
             </div>
 
-            {/* Security Notice */}
-            <div style={styles.securityBox}>
-              <div style={styles.securityTitle}>
-                🛡️ Admin privileges
+            <div className="create-admin-security">
+              <div className="create-admin-security-title">
+                <span aria-hidden="true">🛡️</span>
+                Administrator privileges
               </div>
 
-              <p style={styles.securityText}>
-                Admin accounts have access to donor management, recipient
-                management, blood requests, verification and platform
-                activity logs.
+              <p>
+                Administrators can manage donors, recipients,
+                blood requests, verification, and platform activity.
+                Only create accounts for trusted administrators.
               </p>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
+              className="create-admin-submit"
               disabled={loading}
-              style={{
-                ...styles.submitButton,
-                opacity: loading ? 0.7 : 1,
-              }}
             >
-              {loading ? "Creating Admin..." : "Create Admin Account"}
+              {loading ? (
+                <>
+                  <span className="create-admin-spinner" />
+                  Creating account...
+                </>
+              ) : (
+                "Create Admin Account"
+              )}
             </button>
           </form>
-        </div>
+
+          <p className="create-admin-footer">
+            Blood Donation Finder · Secure administration
+          </p>
+        </section>
       </main>
     </div>
   );
-};
-
-const styles = {
-  page: {
-    minHeight: "100vh",
-    backgroundColor: "#f9fafb",
-    fontFamily:
-      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-  },
-
-  header: {
-    height: "70px",
-    padding: "0 6%",
-    backgroundColor: "#ffffff",
-    borderBottom: "1px solid #e5e7eb",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  logo: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    fontSize: "19px",
-    fontWeight: "700",
-    color: "#111827",
-  },
-
-  logoIcon: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "50%",
-    backgroundColor: "#dc2626",
-    color: "#ffffff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "19px",
-  },
-
-  backButton: {
-    border: "none",
-    backgroundColor: "transparent",
-    color: "#dc2626",
-    fontWeight: "600",
-    cursor: "pointer",
-    fontSize: "14px",
-  },
-
-  main: {
-    minHeight: "calc(100vh - 70px)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "flex-start",
-    padding: "50px 20px",
-  },
-
-  card: {
-    width: "100%",
-    maxWidth: "520px",
-    backgroundColor: "#ffffff",
-    borderRadius: "16px",
-    padding: "38px",
-    boxShadow: "0 10px 35px rgba(0, 0, 0, 0.07)",
-    border: "1px solid #f1f1f1",
-  },
-
-  iconContainer: {
-    width: "58px",
-    height: "58px",
-    borderRadius: "14px",
-    backgroundColor: "#fee2e2",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "26px",
-    marginBottom: "18px",
-  },
-
-  title: {
-    margin: "0 0 8px",
-    fontSize: "28px",
-    fontWeight: "800",
-    color: "#111827",
-  },
-
-  subtitle: {
-    margin: "0 0 25px",
-    color: "#6b7280",
-    fontSize: "14px",
-    lineHeight: "1.6",
-  },
-
-  field: {
-    marginBottom: "18px",
-  },
-
-  label: {
-    display: "block",
-    marginBottom: "7px",
-    fontSize: "14px",
-    fontWeight: "600",
-    color: "#374151",
-  },
-
-  optional: {
-    color: "#9ca3af",
-    fontWeight: "400",
-  },
-
-  input: {
-    width: "100%",
-    boxSizing: "border-box",
-    padding: "12px 13px",
-    border: "1px solid #d1d5db",
-    borderRadius: "8px",
-    fontSize: "14px",
-    outline: "none",
-    color: "#111827",
-    backgroundColor: "#ffffff",
-  },
-
-  passwordWrapper: {
-    position: "relative",
-  },
-
-  passwordInput: {
-    width: "100%",
-    boxSizing: "border-box",
-    padding: "12px 65px 12px 13px",
-    border: "1px solid #d1d5db",
-    borderRadius: "8px",
-    fontSize: "14px",
-    outline: "none",
-    color: "#111827",
-  },
-
-  showButton: {
-    position: "absolute",
-    right: "10px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    border: "none",
-    backgroundColor: "transparent",
-    color: "#dc2626",
-    fontWeight: "600",
-    cursor: "pointer",
-    fontSize: "12px",
-  },
-
-  securityBox: {
-    padding: "14px",
-    backgroundColor: "#fff7ed",
-    border: "1px solid #fed7aa",
-    borderRadius: "9px",
-    margin: "8px 0 22px",
-  },
-
-  securityTitle: {
-    fontSize: "13px",
-    fontWeight: "700",
-    color: "#9a3412",
-    marginBottom: "5px",
-  },
-
-  securityText: {
-    margin: 0,
-    fontSize: "12px",
-    lineHeight: "1.5",
-    color: "#7c2d12",
-  },
-
-  submitButton: {
-    width: "100%",
-    padding: "13px",
-    border: "none",
-    borderRadius: "8px",
-    backgroundColor: "#dc2626",
-    color: "#ffffff",
-    fontSize: "15px",
-    fontWeight: "700",
-    cursor: "pointer",
-  },
-
-  successMessage: {
-    padding: "12px",
-    marginBottom: "18px",
-    borderRadius: "8px",
-    backgroundColor: "#dcfce7",
-    color: "#166534",
-    fontSize: "13px",
-    fontWeight: "600",
-  },
-
-  errorMessage: {
-    padding: "12px",
-    marginBottom: "18px",
-    borderRadius: "8px",
-    backgroundColor: "#fee2e2",
-    color: "#b91c1c",
-    fontSize: "13px",
-    fontWeight: "600",
-  },
-};
+}
 
 export default CreateAdmin;

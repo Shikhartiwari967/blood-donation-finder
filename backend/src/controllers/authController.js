@@ -183,15 +183,17 @@ const createAdmin = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const admin = await User.create({
-      name,
-      email,
-      phone,
-      password: hashedPassword,
-      role: "admin",
-      isVerified: true,
-      isAvailable: false,
-    });
+  const admin = await User.create({
+  name: name.trim(),
+  email: email.trim().toLowerCase(),
+  phone: phone.trim(),
+  password: hashedPassword,
+  bloodGroup: "O+",
+  city: "Unknown",
+  role: "admin",
+  isVerified: true,
+  isAvailable: false,
+});
 
     await createActivityLog({
       user: req.user.userId,
