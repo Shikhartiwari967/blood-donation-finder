@@ -895,14 +895,16 @@
     These are the two actual heading lines.
     Each line gets its own block.
   */
-  .hero-title-line {
-    display: block;
-    width: 100%;
-    max-width: 100%;
+ 
+.hero-title-line {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+}
 
-    white-space: nowrap;
-    box-sizing: border-box;
-  }
 
   .hero-description {
     width: 100%;
@@ -1049,25 +1051,26 @@
     overflow-wrap: break-word;
   }
 
-  .hero-title {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
+ 
+.hero-title {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font-size: clamp(27px, 8vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -0.8px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
 
-    font-size: 34px;
-    line-height: 1.1;
-    letter-spacing: -1px;
-
-    text-align: center;
-  }
-
-  .hero-title-line {
-    width: 100%;
-    max-width: 100%;
-
-    display: block;
-    white-space: nowrap;
-  }
+.hero-title-line {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
 
   .hero-description {
     width: 100%;
@@ -1272,10 +1275,12 @@
     letter-spacing: -0.8px;
   }
 
-  .hero-title-line {
-    width: 100%;
-    white-space: nowrap;
-  }
+.hero-title-line {
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 
   .hero-description {
     font-size: 12px;
